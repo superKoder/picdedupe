@@ -90,26 +90,26 @@ MDLS_KEYS += MDLS_ANGLES_KEYS
 
 class Evaluation:
     def __init__(self) -> None:
-        self.same_filename = list()
-        self.same_hash = list()
-        self.same_image_properties = list()
+        self.same_filename = set()
+        self.same_hash = set()
+        self.same_image_properties = set()
 
     def add_same_filename(self, path: Path):
-        self.same_filename.append(path)
+        self.same_filename.add(path)
 
     def add_same_hash(self, path: Path):
-        self.same_hash.append(path)
+        self.same_hash.add(path)
 
     def add_same_image_properties(self, path: Path):
-        self.same_image_properties.append(path)
+        self.same_image_properties.add(path)
 
-    def paths_with_same_filename(self) -> PathList:
+    def paths_with_same_filename(self) -> PathSet:
         return self.same_filename
 
-    def paths_with_same_hash(self) -> PathList:
+    def paths_with_same_hash(self) -> PathSet:
         return self.same_hash
 
-    def paths_with_same_image_properties(self) -> PathList:
+    def paths_with_same_image_properties(self) -> PathSet:
         return self.same_image_properties
 
     def has_filename_dupes(self) -> bool:
@@ -124,37 +124,39 @@ class Evaluation:
 class IndexStore:
 
     def __init__(self) -> None:
-        self.by_file_path = dict()
-        self.by_file_hash = dict()
-        self.by_file_name = dict()
+        self.by_path = dict()
+        self.by_hash = dict()
+        self.by_filename = dict()
 
-    def _path_list_for_hash(self, hash_str: str) -> PathList:
-        if not hash_str in self.by_file_hash:
-            self.by_file_hash[hash_str] = set()
-        return self.by_file_hash[hash_str]
+    def _path_set_for_hash(self, hash_str: str) -> PathSet:
+        if not hash_str in self.by_hash:
+            self.by_hash[hash_str] = set()
+        return self.by_hash[hash_str]
 
-    def _path_list_for_filename(self, filename: Filename) -> PathList:
-        if not filename in self.by_file_name:
-            self.by_file_name[filename] = set()
-        return self.by_file_name[filename]
+    def _path_set_for_filename(self, filename: Filename) -> PathSet:
+        if not filename in self.by_filename:
+            self.by_filename[filename] = set()
+        return self.by_filename[filename]
 
     def add(self, path: Path, image_properties: PropertyDict):
-        self.by_file_path[path] = image_properties
-        self._path_list_for_hash(image_properties[KEY_FILE_HASH]).add(path)
+        self.by_path[path] = image_properties
+        self._path_set_for_hash(image_properties[KEY_FILE_HASH]).add(path)
         filename = os.path.basename(path)
-        self._path_list_for_filename(filename).add(path)
+        self._path_set_for_filename(filename).add(path)
 
     def _as_dict(self) -> Dict[str,List]: 
-        dict_repr = {
-            KEY_BY_PATH: self.by_file_path,
-            KEY_BY_HASH: self.by_file_hash,
-            KEY_BY_FILENAME: self.by_file_name,
+        by_path_copy = self.by_path # avoiding redundant copy
+        by_hash_copy = dict()
+        by_filename_copy = dict()
+        for key, val in self.by_hash.items():
+            by_hash_copy[key] = list(val)
+        for key, val in self.by_filename.items():
+            by_filename_copy[key] = list(val)
+        return {
+            KEY_BY_PATH: by_path_copy,
+            KEY_BY_HASH: by_hash_copy,
+            KEY_BY_FILENAME: by_filename_copy,
         }
-        for key in dict_repr[KEY_BY_HASH]:
-            dict_repr[KEY_BY_HASH][key] = list(dict_repr[KEY_BY_HASH][key])
-        for key in dict_repr[KEY_BY_FILENAME]:
-            dict_repr[KEY_BY_FILENAME][key] = list(dict_repr[KEY_BY_FILENAME][key])
-        return dict_repr
 
     def save(self, path) -> str: 
         with open(path, "w") as out_file:
@@ -167,13 +169,13 @@ class IndexStore:
             return index_store
         with open(path, "r") as in_file:
             index_store_dict = json.load(fp=in_file)
-            index_store.by_file_path = index_store_dict[KEY_BY_PATH]
-            index_store.by_file_hash = index_store_dict[KEY_BY_HASH]
-            index_store.by_file_name = index_store_dict[KEY_BY_FILENAME]
-            for key in index_store.by_file_hash:
-                index_store.by_file_hash[key] = set(index_store.by_file_hash[key])
-            for key in index_store.by_file_name:
-                index_store.by_file_name[key] = set(index_store.by_file_name[key])
+            index_store.by_path = index_store_dict[KEY_BY_PATH]
+            index_store.by_hash = index_store_dict[KEY_BY_HASH]
+            index_store.by_filename = index_store_dict[KEY_BY_FILENAME]
+            for key in index_store.by_hash:
+                index_store.by_hash[key] = set(index_store.by_hash[key])
+            for key in index_store.by_filename:
+                index_store.by_filename[key] = set(index_store.by_filename[key])
             return index_store
 
 
@@ -201,13 +203,12 @@ def _every_image_files_path(io_path_list: PathList, dir_path: Path):
         for filename in filenames:
             path = root + "/" + filename
             if not is_image_file(filename):
-                print(f"info: SKIPPING non-image {path}")
+                print(f"Skipping non-image: {path}")
                 continue
             io_path_list.append(path)
 
 def every_image_files_path(dir_path: Path) -> PathList:
     """Returns a list of full paths of every .jpg, .heic, etc... file."""
-    print('dir = ' + dir_path)
     path_list = list()
     _every_image_files_path(path_list, dir_path)
     return path_list
@@ -220,12 +221,9 @@ def _stdout_of(cmd_parts: CommandLineParts) -> str:
     """Returns stringified version of _byte_stdout_of()"""
     return _raw_stdout_of(cmd_parts).decode("utf-8").strip()
 
-def _file_md5_mac(path: Path) -> str:
-    """macOS specific command line to get an MD5 of a file."""
-    return _stdout_of(["md5", "-q", path])
-
 def file_md5(path: Path) -> str:
-    return _file_md5_mac(path)
+    # WARNING: This is macOS specific! On Linux, it is md5sum.
+    return _stdout_of(["md5", "-q", path])
 
 def _properties_of_image_file(path: Path) -> PropertyDict:
     """Returns a list of properties that identify the identitiy of a file"""
@@ -234,7 +232,6 @@ def _properties_of_image_file(path: Path) -> PropertyDict:
     cmd = ["mdls"]
     cmd.extend([x for sublist in params for x in sublist])
     cmd.append(path)
-    print(" ".join(cmd))
 
     output_dict = dict()
     raw_lines = _raw_stdout_of(cmd).split(b"\n")
@@ -327,11 +324,11 @@ def is_quick_signature_equal(image_path: Path, index_store: IndexStore) -> bool:
     This assumes that no changes were made to the file. 
     This is not necessarily true, though! A hash should be used for certainty.
     """
-    if not image_path in index_store.by_file_path:
+    if not image_path in index_store.by_path:
         return False
     quick_signature = quick_image_signature_dict_of(image_path)
-    if quick_signature[KEY_FILE_SIZE] != index_store.by_file_path[image_path][KEY_FILE_SIZE]: return False
-    if quick_signature[KEY_FILE_DATE] != index_store.by_file_path[image_path][KEY_FILE_DATE]: return False
+    if quick_signature[KEY_FILE_SIZE] != index_store.by_path[image_path][KEY_FILE_SIZE]: return False
+    if quick_signature[KEY_FILE_DATE] != index_store.by_path[image_path][KEY_FILE_DATE]: return False
     return True
 
 def _is_equal_property(key: str, a: PropertyDict, b: PropertyDict) -> bool:
@@ -339,81 +336,226 @@ def _is_equal_property(key: str, a: PropertyDict, b: PropertyDict) -> bool:
 
 def evaluate(candidate_image_path: Path, candidate_image_properties: PropertyDict, index_store: IndexStore) -> Evaluation:
     evaluation = Evaluation()
-    candidate_image_filename = os.path.basename(candidate_image_path)
-    for image_path in index_store.by_file_name:
+
+    candidate_hash = candidate_image_properties[KEY_FILE_HASH]
+    candidate_filename = os.path.basename(candidate_image_path)
+
+    if candidate_hash in index_store.by_hash:
+        evaluation.paths_with_same_hash().update(index_store.by_hash[candidate_hash])
+
+    if candidate_filename in index_store.by_filename:
+        evaluation.paths_with_same_filename().update(index_store.by_filename[candidate_filename])
+
+    for other_image_path, other_image_properties in index_store.by_path.items():
         
-        image_filename = os.path.basename(image_path)
-        if candidate_image_filename == image_filename: 
-            evaluation.add_same_filename(image_path)
-
-        image_properties = index_store.by_file_name[image_path]
-        if _is_equal_property(KEY_FILE_HASH, candidate_image_properties, image_properties):
-            evaluation.add_same_hash(image_path)
-
-        if (_is_equal_property(KEY_IMAGE_RES, candidate_image_properties, image_properties) and
-            _is_equal_property(KEY_IMAGE_DATE, candidate_image_properties, image_properties) and
-            _is_equal_property(KEY_IMAGE_CREATOR, candidate_image_properties, image_properties) and
-            _is_equal_property(KEY_IMAGE_LOC, candidate_image_properties, image_properties) and
-            _is_equal_property(KEY_IMAGE_ANGLES, candidate_image_properties, image_properties)):
-            evaluation.add_same_image_properties(image_path)
+        if (_is_equal_property(KEY_IMAGE_RES, candidate_image_properties, other_image_properties) and
+            _is_equal_property(KEY_IMAGE_DATE, candidate_image_properties, other_image_properties) and
+            _is_equal_property(KEY_IMAGE_CREATOR, candidate_image_properties, other_image_properties) and
+            _is_equal_property(KEY_IMAGE_LOC, candidate_image_properties, other_image_properties) and
+            _is_equal_property(KEY_IMAGE_ANGLES, candidate_image_properties, other_image_properties)):
+            evaluation.add_same_image_properties(other_image_path)
 
     return evaluation
 
-def is_likely_file_dupe(evaluation: Evaluation, out_paths: PathList) -> bool:
-    if not evaluation.has_hash_dupes(): return False
-    out_paths.clear()
-    out_paths.extend(evaluation.paths_with_same_hash())
-    return True
 
-def is_likely_image_dupe(evaluation: Evaluation, out_paths: PathList) -> bool:
-    if not evaluation.has_image_property_dupes(): return False
-    out_paths.clear()
-    out_paths.extend(evaluation.paths_with_same_image_properties())
-    return True
+def _index_dir(index_store: IndexStore, start_dir: Path, skip_untouched=True, do_evaluation=True):
+
+    print(f"Indexing from {start_dir}...")
+
+    all_image_paths = every_image_files_path(start_dir)
+    for image_path in all_image_paths:
+        if skip_untouched and is_quick_signature_equal(image_path, index_store):
+            print(f"Skipping untouched: {image_path}")
+            continue
+
+        print(f"Processing image: {image_path}")
+        image_properties = image_signature_dict_of(image_path)
+
+        if do_evaluation:
+            evaluation = evaluate(image_path, image_properties, index_store)
+
+            # TODO: Make evaluation() aware of weak data
+            # TODO: Detect .mov for .jpg (on creator + date + filename?)
+
+            if evaluation.has_hash_dupes():
+                print(f"! DUPE ! {image_path} is a file dupe of {evaluation.paths_with_same_hash()}")
+                # TODO: IF DUPE *AND* SAME:
+                # TODO:   Move to ./DUPES
+                # TODO:   Add a ./DUPES/{filename}.txt with the original
+
+            if evaluation.has_image_property_dupes():
+                print(f"? SAME ? {image_path} is an image dupe of {evaluation.paths_with_same_image_properties()}")
+
+                # TODO: IF "better version" of same filename minus ext:
+                # TODO:   Add(replace) file in same path
+                # TODO:   Rename worse version as filename.heic.jpg
+                # TODO:   Move to ./ENHANCEMENTS
+
+                # TODO: If differently named (or not better):
+                # TODO:   Move to ./SIMILAR
+                # TODO:   Add a ./SIMILAR/{filename}.txt with original
+
+        index_store.add(image_path, image_properties)
+    print(f"Indexing of {start_dir} is done.")
+
+
+def index_established_collection_dir(index_store: IndexStore, start_dir: Path):
+    _index_dir(
+        index_store, 
+        start_dir, 
+        skip_untouched=True, 
+        do_evaluation=False,
+        )
+
+def evaluate_candidate_dir(index_store: IndexStore, start_dir: Path):
+    _index_dir(
+        index_store, 
+        start_dir, 
+        skip_untouched=False, 
+        do_evaluation=True,
+        )
+
+
+class FixItDescriptionElement:
+    def __init__(self, text: str) -> None:
+        self.text = text
+    def text(self):
+        return self.text
+    def has_link(self) -> bool:
+        pass # abstract
+    def link(self) -> str:
+        pass # abstract
+
+class FixItDescriptionTextElement(FixItDescriptionElement):
+    def has_link(self) -> bool:
+        return False
+    def link(self) -> str:
+        return None
+
+class FixItDescriptionBoldTextElement(FixItDescriptionElement):
+    def has_link(self) -> bool:
+        return False
+    def link(self) -> str:
+        return None
+
+class FixItDescriptionFilePathElement(FixItDescriptionElement):
+    def __init__(self, path: Path, label: str) -> None:
+        super().__init__(path)
+        self.path = path
+        self.label = label
+    def has_link(self) -> bool:
+        return True
+    def link(self) -> str:
+        return "file://" + self.path
+    def label(self) -> str:
+        return self.label
+
+class FixItDescription:
+    def __init__(self) -> None:
+        self.elements = list()
+    def add(self, element: FixItDescriptionElement):
+        self.elements.append(element)
+    def add_text(self, text: str):
+        self.add(FixItDescriptionTextElement(text))
+    def add_bold_text(self, text: str):
+        self.add(FixItDescriptionBoldTextElement(text))
+    def add_file_path(self, path: Path, label: str):
+        self.add(FixItDescriptionFilePathElement(path, label))
+    def as_simple_text(self) -> str:
+        return " ".join([x.text() for x in self.elements])
+
+class FixItAction:
+    def __init__(self) -> None:
+        self.description = FixItDescription()
+    def describe(self) -> FixItDescription:
+        return self.description
+    def doIt(self) -> bool:
+        return True
+
+class FixItMoveFileAction(FixItAction):
+    """Moves a file to another location"""
+    def __init__(self, path: Path, to_dir: Path) -> None:
+        super().__init__()
+        self.path = path
+        self.to_dir = to_dir
+        self.description.add_bold_text("Move")
+        self.description.add_file_path(path)
+        self.description.add_text("to directory")
+        self.description.add_file_path(to_dir)
+
+    def doIt(self, add_explanation=True) -> bool:
+        from_path = os.path.join(self.from_dir, self.filename)
+        to_path = os.path.join(self.to_dir, self.filename)
+        cmd = ["echo", "mv", from_path, to_path]
+        _stdout_of(cmd)
+
+class FixIt:
+    def __init__(self) -> None:
+        self.description = FixItDescription()
+        self.actions = list()
+    
+    def describe(self) -> FixItDescription:
+        return self.description()
+    
+    def proposed_actions(self) -> List[FixItAction]:
+        return self.actions
+    
+    def ignore(self) -> None:
+        pass
+
+class ExactDupeFixIt(FixIt):
+    def __init__(self, candidate_path: Path, other_path: Path) -> None:
+        super().__init__()
+        self.description.add_text("Detected an")
+        self.description.add_bold_text("exact dupe")
+        self.description.add_text("at")
+        self.description.add_file_path(candidate_path)
+        self.description.add_text("matching")
+        self.description.add_file_path(other_path)
+        self.actions.append(FixItMoveFileAction(candidate_path, "./_dupes"))
+
+class WrongDateFixIt(FixIt):
+    pass
+
+class SimilarImageFixIt(FixIt):
+    pass
+
+class BetterQualityVersionFixIt(SimilarImageFixIt):
+    """e.g. Found a new HEIC of a JPEG"""
+    pass
+
+class WorseQualityVersionFixIt(SimilarImageFixIt):
+    """e.g. Found a new JPEG of an HEIC"""
+    pass
+
+class SmallerVersionFixIt(SimilarImageFixIt):
+    """e.g. A cropped version of an original"""
+    pass
+
+class BiggerVersionFixIt(SimilarImageFixIt):
+    """e.g. A cropped version of an original"""
+    pass
 
 def main():
     JSON_FILENAME = "picdedupe.json"
-    # START_DIR = "/Users/tim/AllPics.copy/bronmateriaal"
-    START_DIR = "/Users/tim/Tim11pro/_KEEP"
+    COLLECTION_START_DIR = "/Users/tim/AllPics.copy/bronmateriaal"
+    CANDIDATE_START_DIR = "/Users/tim/Tim11pro"
 
+    print(f"Will load IndexStore from {JSON_FILENAME} if available.")
     index_store = IndexStore.load(JSON_FILENAME)
-    out_paths = list()
+    print("Done.")
 
-    all_image_paths = every_image_files_path(START_DIR)
-    for image_path in all_image_paths:
-        print(f"FILE: {image_path}")
+    print(f"Indexing collection at {COLLECTION_START_DIR}...")
+    index_established_collection_dir(index_store, COLLECTION_START_DIR)
+    print("Done.")
 
-        if is_quick_signature_equal(image_path, index_store):
-            print(f"SKIPPING UNTOUCHED {image_path}")
-            continue
-
-        image_properties = image_signature_dict_of(image_path)
-        evaluation = evaluate(image_path, image_properties, index_store)
-
-        # TODO: Make evaluation() aware of weak data
-        # TODO: Detect .mov for .jpg (on creator + date + filename?)
-
-        if is_likely_file_dupe(evaluation, out_paths):
-            print(f"DUPE: {image_path} is a file dupe of {out_paths}")
-            # TODO: IF DUPE *AND* SAME:
-            # TODO:   Move to ./DUPES
-            # TODO:   Add a ./DUPES/{filename}.txt with the original
-
-        if is_likely_image_dupe(evaluation, out_paths):
-            print(f"SAME: {image_path} is an image dupe of {out_paths}")
-
-            # TODO: IF "better version" of same filename minus ext:
-            # TODO:   Add(replace) file in same path
-            # TODO:   Rename worse version as filename.heic.jpg
-            # TODO:   Move to ./ENHANCEMENTS
-
-            # TODO: If differently named (or not better):
-            # TODO:   Move to ./SIMILAR
-            # TODO:   Add a ./SIMILAR/{filename}.txt with original
-
-        index_store.add(image_path, image_properties)
-
+    print(f"Saving IndexStore to {JSON_FILENAME}...")
     index_store.save(JSON_FILENAME)
+    print("Done.")
+
+    print(f"Checking candidates at {CANDIDATE_START_DIR}...")
+    evaluate_candidate_dir(index_store, CANDIDATE_START_DIR)
+    print("Done.")
 
 if __name__ == "__main__":
     main()
