@@ -1,6 +1,13 @@
-from picdeduper.common import *
 import os
 import subprocess
+
+from typing import List, Set
+
+Filename = str
+Path = str
+PathList = List[str]
+PathSet = Set[str]
+CommandLineParts = List[str]
 
 def FilenameExt(filename: Filename) -> str:
     parts = os.path.splitext(filename)

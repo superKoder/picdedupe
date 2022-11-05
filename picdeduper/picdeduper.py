@@ -1,10 +1,9 @@
-from picdeduper.common import *
 from picdeduper.indexstore import IndexStore
-import picdeduper.fingerprinting
-import picdeduper.evaluation
-import picdeduper.system
+from picdeduper import fingerprinting as pdfingerprint
+from picdeduper import evaluation as pdeval
+from picdeduper import sys as pds
 
-def is_processed_file(image_path: Path, index_store: IndexStore) -> bool:
+def is_processed_file(image_path: pds.Path, index_store: IndexStore) -> bool:
     """
     Returns True if the image's quick signature matches the one we have in the JSON-loaded results. 
     This assumes that no changes were made to the file. 
@@ -12,25 +11,25 @@ def is_processed_file(image_path: Path, index_store: IndexStore) -> bool:
     """
     if not image_path in index_store.by_path:
         return False
-    quick_signature = picdeduper.fingerprinting.quick_image_signature_dict_of(image_path)
+    quick_signature = pdfingerprint.quick_image_signature_dict_of(image_path)
     known_signature = index_store.by_path[image_path]
-    return picdeduper.evaluation.is_quick_signature_equal(quick_signature, known_signature)
+    return pdeval.is_quick_signature_equal(quick_signature, known_signature)
 
-def _index_dir(index_store: IndexStore, start_dir: Path, skip_untouched=True, do_evaluation=True):
+def _index_dir(index_store: IndexStore, start_dir: pds.Path, skip_untouched=True, do_evaluation=True):
 
     print(f"Indexing from {start_dir}...")
 
-    all_image_paths = picdeduper.system.every_image_files_path(start_dir)
+    all_image_paths = pds.every_image_files_path(start_dir)
     for image_path in all_image_paths:
         if skip_untouched and is_processed_file(image_path, index_store):
             print(f"Skipping untouched: {image_path}")
             continue
 
         print(f"Processing image: {image_path}")
-        image_properties = picdeduper.fingerprinting.image_signature_dict_of(image_path)
+        image_properties = pdfingerprint.image_signature_dict_of(image_path)
 
         if do_evaluation:
-            result = picdeduper.evaluation.evaluate(image_path, image_properties, index_store)
+            result = pdeval.evaluate(image_path, image_properties, index_store)
 
             # TODO: Make evaluation() aware of weak data
             # TODO: Detect .mov for .jpg (on creator + date + filename?)
@@ -57,15 +56,15 @@ def _index_dir(index_store: IndexStore, start_dir: Path, skip_untouched=True, do
     print(f"Indexing of {start_dir} is done.")
 
 
-def index_established_collection_dir(index_store: IndexStore, start_dir: Path):
+def index_established_collection_dir(index_store: IndexStore, start_dir: pds.Path):
     _index_dir(
         index_store, 
         start_dir, 
         skip_untouched=True, 
-        do_evaluation=False,
+        do_evaluation=True,
         )
 
-def evaluate_candidate_dir(index_store: IndexStore, start_dir: Path):
+def evaluate_candidate_dir(index_store: IndexStore, start_dir: pds.Path):
     _index_dir(
         index_store, 
         start_dir, 

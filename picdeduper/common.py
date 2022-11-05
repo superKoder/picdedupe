@@ -1,10 +1,5 @@
 from typing import List, Dict, Set
 
-Filename = str
-Path = str
-PathList = List[str]
-PathSet = Set[str]
-CommandLineParts = List[str]
 PropertyDict = Dict[str,str]
 
 KEY_FILE_HASH = "file_hash"
