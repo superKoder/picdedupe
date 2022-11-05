@@ -7,7 +7,7 @@
         {
             "name": "Python: Current File",
             "type": "python",
-            "program": "${file}",
+            "program": "picdedupe.py",
             "request": "launch",
             "console": "integratedTerminal",
             "args": [
