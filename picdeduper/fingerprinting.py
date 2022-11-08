@@ -144,7 +144,7 @@ def quick_image_signature_dict_of(image_path: pds.Path) -> pdc.PropertyDict:
 def image_signature_dict_of(image_path: pds.Path) -> pdc.PropertyDict:
     image_properties = _properties_of_image_file(image_path)
     return {
-        pdc.KEY_FILE_HASH : pds.file_md5(image_path),
+        pdc.KEY_FILE_HASH : pds.quick_file_hash(image_path),
         pdc.KEY_FILE_DATE : _file_date_string(image_properties),
         pdc.KEY_FILE_SIZE : _file_size_string(image_properties),
         pdc.KEY_IMAGE_RES : _image_resolution_string(image_properties),

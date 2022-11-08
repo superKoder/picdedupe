@@ -30,9 +30,25 @@ def stdout_of(cmd_parts: CommandLineParts) -> str:
     """Returns stringified version of _byte_stdout_of()"""
     return raw_stdout_of(cmd_parts).decode("utf-8").strip()
 
-def file_md5(path: Path) -> str:
+def _openssl_digest(algorithm: str, path: Path) -> str:
+    parts = stdout_of(["openssl", algorithm, "-r", path]).split(" ")
+    if len(parts) == 0: 
+        return None
+    return parts[0]
+
+def _file_sha256_hash(path: Path) -> str:
+    return _openssl_digest("sha256", path)
+
+def _file_md4_hash(path: Path) -> str:
+    """Note: MD4 is known to be insecure, but it fast!"""
+    return _openssl_digest("md4", path)
+
+def _file_md5_hash(path: Path) -> str:
     # WARNING: This is macOS specific! On Linux, it is md5sum.
     return stdout_of(["md5", "-q", path])
+
+def quick_file_hash(path: Path) -> str:
+    return _file_md4_hash(path)
 
 def is_picture_file(filename: Filename) -> bool:
     ext = FilenameExt(filename).upper()
