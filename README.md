@@ -2,26 +2,26 @@
 
 This is very, very early work. It is probably **not useful** to you at this point.
 
-Eventually, this will become two scripts, in Python, for macOS only:
+Eventually, this will become a macOS-only(!) Python script with two ways to use it:
 
 
-## Script 1: Fingerprinting / Indexing
+## Usage 1: Fingerprinting / Indexing
 
-The first script will "fingerprint" a large number of pictures or movies.  
-It does this by a combination of an MD5 hash and Spotlight metadata.  
-It writes the result in a single images.json file.  
+In this first usage, it will "fingerprint" a large number of pictures or movies.  
+It does this by a combination of a fast file hash (e.g. MD5 or SHA1) and Spotlight
+metadata. It writes the result in a single images.json file.  
   
 Consequetive runs over the same files should finish a lot quicker. As it uses
 an existing images.json to detect changes. So it can skip work on unchanged
 files.
 
 If, however, you want to re-fingerprint everything, you can simply remove the
-images.json file.
+picdedupe.json file.
 
 
-## Script 2: Detecting Dupes & Similar Images
+## Usage 2: Detecting Dupes & Similar Images
 
-Using the same images.json file (created by Script 1), it can check another 
+Using the same picdeduper.json file (created by usage 1), it can check another 
 folder structure of candidate images (e.g. new pics from your camera). 
 
 If it finds a perfect dupe, it will drop the new file (by moving it into a
@@ -45,8 +45,7 @@ GPS location, the camera, etc... it can act on that in several ways:
     together as well.
 
 
-WARNING: THIS IS NOT READY TO BE USED BY ANYONE.
+**WARNING:** THIS IS NOT READY TO BE USED BY ANYONE.
 
-WARNING: USE THIS AT YOUR OWN RISK (OF LOSING YOUR PICTURES)! MAKE BACKUPS!
-
+**WARNING:** USE THIS AT YOUR OWN RISK (OF LOSING YOUR PICTURES)! MAKE BACKUPS!
 
