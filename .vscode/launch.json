@@ -7,10 +7,63 @@
         {
             "name": "Python: Current File",
             "type": "python",
+            "program": "${file}",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "args": [
+            ]
+        },
+        {
+            "name": "picdedupe (no args)",
+            "type": "python",
             "program": "picdedupe.py",
             "request": "launch",
             "console": "integratedTerminal",
             "args": [
+            ]
+        },
+        {
+            "name": "picdedupe (help)",
+            "type": "python",
+            "program": "picdedupe.py",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "args": [
+                "--help"
+            ]
+        },
+        {
+            "name": "picdedupe (usecase 1)",
+            "type": "python",
+            "program": "picdedupe.py",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "args": [
+                "--json_file", "./my.json",
+                "--collection_dir", "~/collection",
+            ]
+        },
+        {
+            "name": "picdedupe (usecase 2)",
+            "type": "python",
+            "program": "picdedupe.py",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "args": [
+                "--json_file", "./my.json",
+                "--incoming_dir", "~/candidates",
+            ]
+        },
+        {
+            "name": "picdedupe (usecase 3)",
+            "type": "python",
+            "program": "picdedupe.py",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "args": [
+                "--json_file", "./my.json",
+                "--incoming_dir", "~/candidates",
+                "--collection_dir", "~/collection",
             ]
         }
     ]

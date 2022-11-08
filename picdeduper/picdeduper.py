@@ -61,7 +61,7 @@ def index_established_collection_dir(index_store: IndexStore, start_dir: pds.Pat
         index_store, 
         start_dir, 
         skip_untouched=True, 
-        do_evaluation=True,
+        do_evaluation=False,
         )
 
 def evaluate_candidate_dir(index_store: IndexStore, start_dir: pds.Path):
