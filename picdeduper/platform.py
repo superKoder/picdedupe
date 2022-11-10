@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+from abc import ABC, abstractmethod
 from typing import Dict, List, Set
 
 Filename = str
@@ -9,32 +10,37 @@ PathList = List[str]
 PathSet = Set[str]
 CommandLineParts = List[str]
 
+
 def filename_ext(filename: Filename) -> str:
     parts = os.path.splitext(filename)
     return parts[1] if len(parts) == 2 else ""
 
+
 def path_join(dir: Path, filename: Path) -> Path:
     return os.path.join(dir, filename)
+
 
 def path_filename(path: Path) -> Filename:
     return os.path.basename(path)
 
-class Platform:
 
+class Platform(ABC):
+
+    @abstractmethod
     def path_exists(self, path: Path) -> bool:
-        return os.path.exists(path)
+        pass
 
+    @abstractmethod
     def read_text_file(self, path: Path) -> str:
-        with open(path, "r") as input_file:
-            return input_file.read()
+        pass
 
+    @abstractmethod
     def write_text_file(self, path: Path, content: str):
-        with open(path, "w") as output_file:
-            output_file.write(content)
+        pass
 
+    @abstractmethod
     def raw_stdout_of(self, cmd_parts: CommandLineParts) -> str:
-        """Returns stdout of command line, in raw bytes"""
-        return subprocess.run(cmd_parts, stdout=subprocess.PIPE).stdout
+        pass
 
     def stdout_of(self, cmd_parts: CommandLineParts) -> str:
         """Returns stringified version of _byte_stdout_of()"""
@@ -42,7 +48,7 @@ class Platform:
 
     def _openssl_digest(self, algorithm: str, path: Path) -> str:
         parts = self.stdout_of(["openssl", algorithm, "-r", path]).split(" ")
-        if len(parts) == 0: 
+        if len(parts) == 0:
             return None
         return parts[0]
 
@@ -62,21 +68,50 @@ class Platform:
 
     def is_picture_file(self, filename: Filename) -> bool:
         ext = filename_ext(filename).upper()
-        if ext == ".JPG": return True
-        if ext == ".HEIC": return True
-        if ext == ".JPEG": return True
+        if ext == ".JPG":
+            return True
+        if ext == ".HEIC":
+            return True
+        if ext == ".JPEG":
+            return True
         return False
 
     def is_video_file(self, filename: Filename) -> bool:
         ext = filename_ext(filename).upper()
-        if ext == ".MOV": return True
-        if ext == ".MP4": return True
-        if ext == ".HEVC": return True
+        if ext == ".MOV":
+            return True
+        if ext == ".MP4":
+            return True
+        if ext == ".HEVC":
+            return True
         return False
 
     def is_image_file(self, filename: Filename) -> bool:
-        if filename.startswith("."): return False
+        if filename.startswith("."):
+            return False
         return self.is_picture_file(filename) or self.is_video_file(filename)
+
+    @abstractmethod
+    def every_image_files_path(self, dir_path: Path) -> PathList:
+        pass
+
+
+class MacOSPlatform(Platform):
+
+    def path_exists(self, path: Path) -> bool:
+        return os.path.exists(path)
+
+    def read_text_file(self, path: Path) -> str:
+        with open(path, "r") as input_file:
+            return input_file.read()
+
+    def write_text_file(self, path: Path, content: str):
+        with open(path, "w") as output_file:
+            output_file.write(content)
+
+    def raw_stdout_of(self, cmd_parts: CommandLineParts) -> str:
+        """Returns stdout of command line, in raw bytes"""
+        return subprocess.run(cmd_parts, stdout=subprocess.PIPE).stdout
 
     def _every_image_files_path(self, io_path_list: PathList, dir_path: Path):
         """Recursive part of every_image_files_path()"""
@@ -98,11 +133,11 @@ class Platform:
 class FakePlatform(Platform):
 
     def __init__(self) -> None:
-        self.existing_paths: Dict[Filename,bool] = dict()
-        self.text_files: Dict[Filename,str] = dict()
-        self.raw_cmd_output: Dict[str,bytes] = dict()
+        self.existing_paths: Dict[Filename, bool] = dict()
+        self.text_files: Dict[Filename, str] = dict()
+        self.raw_cmd_output: Dict[str, bytes] = dict()
         self.catchall_raw_cmd_output: bytes = None
-        self.image_files: Dict[Path,List[Path]] = dict()
+        self.image_files: Dict[Path, List[Path]] = dict()
         self.called_cmd_lines = list()
 
     def configure_path_exists(self, path: Path, value: bool) -> None:
