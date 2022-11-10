@@ -1,8 +1,8 @@
+import json
+from typing import Dict, List
+
 from picdeduper import common as pdc
 from picdeduper import platform as pds
-import json
-
-from typing import List, Dict
 
 class IndexStore:
 
@@ -25,7 +25,7 @@ class IndexStore:
     def add(self, path: pds.Path, image_properties: pdc.PropertyDict):
         self.by_path[path] = image_properties
         self._path_set_for_hash(image_properties[pdc.KEY_FILE_HASH]).add(path)
-        filename = pds.PathFilename(path)
+        filename = pds.path_filename(path)
         self._path_set_for_filename(filename).add(path)
 
     def _as_dict(self) -> Dict[str,List]: 
@@ -43,24 +43,24 @@ class IndexStore:
         }
 
     def save(self, path: pds.Path) -> str: 
-        with open(path, "w") as out_file:  # TODO: should use Platform
-            json.dump(obj=self._as_dict(), fp=out_file, indent=2, sort_keys=True)
+        json_string = json.dumps(obj=self._as_dict(), indent=2, sort_keys=True)
+        self.platform.write_text_file(path, json_string)
 
     def load(path: pds.Path, platform: pds.Platform) -> None:
         index_store = IndexStore(platform)
-        if not platform.PathExists(path):
+        if not platform.path_exists(path):
             print("WARNING: No JSON file found. Starting new one.")
             return index_store
-        with open(path, "r") as in_file:  # TODO: should use Platform
-            index_store_dict = json.load(fp=in_file)
-            index_store.by_path = index_store_dict[pdc.KEY_BY_PATH]
-            index_store.by_hash = index_store_dict[pdc.KEY_BY_HASH]
-            index_store.by_filename = index_store_dict[pdc.KEY_BY_FILENAME]
-            for key in index_store.by_hash:
-                index_store.by_hash[key] = set(index_store.by_hash[key])
-            for key in index_store.by_filename:
-                index_store.by_filename[key] = set(index_store.by_filename[key])
-            return index_store
+        content = platform.read_text_file(path)
+        index_store_dict = json.loads(content)
+        index_store.by_path = index_store_dict[pdc.KEY_BY_PATH]
+        index_store.by_hash = index_store_dict[pdc.KEY_BY_HASH]
+        index_store.by_filename = index_store_dict[pdc.KEY_BY_FILENAME]
+        for key in index_store.by_hash:
+            index_store.by_hash[key] = set(index_store.by_hash[key])
+        for key in index_store.by_filename:
+            index_store.by_filename[key] = set(index_store.by_filename[key])
+        return index_store
 
 def load(path: pds.Path) -> None:
     return IndexStore.load(path)

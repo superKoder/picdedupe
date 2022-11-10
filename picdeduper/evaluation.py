@@ -50,7 +50,7 @@ def evaluate(candidate_image_path: pds.Path, candidate_image_properties: pdc.Pro
     result = EvaluationResult()
 
     candidate_hash = candidate_image_properties[pdc.KEY_FILE_HASH]
-    candidate_filename = pds.PathFilename(candidate_image_path)
+    candidate_filename = pds.path_filename(candidate_image_path)
 
     if candidate_hash in index_store.by_hash:
         result.paths_with_same_hash().update(index_store.by_hash[candidate_hash])

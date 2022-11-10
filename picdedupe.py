@@ -71,9 +71,9 @@ def main():
         picdeduper.index_established_collection_dir(index_store, collection_start_dir)
         print("Done.")
 
-    print(f"Saving IndexStore to {json_path}...")
-    index_store.save(json_path)
-    print("Done.")
+        print(f"Saving IndexStore to {json_path}...")
+        index_store.save(json_path)
+        print("Done.")
 
     if candidate_start_dir:
         print(f"Checking candidates at {candidate_start_dir}...")

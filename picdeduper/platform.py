@@ -9,20 +9,28 @@ PathList = List[str]
 PathSet = Set[str]
 CommandLineParts = List[str]
 
-def FilenameExt(filename: Filename) -> str:
+def filename_ext(filename: Filename) -> str:
     parts = os.path.splitext(filename)
     return parts[1] if len(parts) == 2 else ""
 
-def PathJoin(dir: Path, filename: Path) -> Path:
+def path_join(dir: Path, filename: Path) -> Path:
     return os.path.join(dir, filename)
 
-def PathFilename(path: Path) -> Filename:
+def path_filename(path: Path) -> Filename:
     return os.path.basename(path)
 
 class Platform:
 
-    def PathExists(self, path: Path) -> bool:
+    def path_exists(self, path: Path) -> bool:
         return os.path.exists(path)
+
+    def read_text_file(self, path: Path) -> str:
+        with open(path, "r") as input_file:
+            return input_file.read()
+
+    def write_text_file(self, path: Path, line: str):
+        with open(path, "w") as output_file:
+            output_file.write(line)
 
     def raw_stdout_of(self, cmd_parts: CommandLineParts) -> str:
         """Returns stdout of command line, in raw bytes"""
@@ -53,14 +61,14 @@ class Platform:
         return self._file_md4_hash(path)
 
     def is_picture_file(self, filename: Filename) -> bool:
-        ext = FilenameExt(filename).upper()
+        ext = filename_ext(filename).upper()
         if ext == ".JPG": return True
         if ext == ".HEIC": return True
         if ext == ".JPEG": return True
         return False
 
     def is_video_file(self, filename: Filename) -> bool:
-        ext = FilenameExt(filename).upper()
+        ext = filename_ext(filename).upper()
         if ext == ".MOV": return True
         if ext == ".MP4": return True
         if ext == ".HEVC": return True
