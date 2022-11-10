@@ -1,6 +1,6 @@
 from picdeduper import common as pdc
 from picdeduper.indexstore import IndexStore
-from picdeduper import sys as pds
+from picdeduper import platform as pds
 
 class EvaluationResult:
     def __init__(self) -> None:

@@ -1,12 +1,13 @@
 from picdeduper import common as pdc
-from picdeduper import sys as pds
+from picdeduper import platform as pds
 import json
 
 from typing import List, Dict
 
 class IndexStore:
 
-    def __init__(self) -> None:
+    def __init__(self, platform: pds.Platform) -> None:
+        self.platform = platform
         self.by_path = dict()
         self.by_hash = dict()
         self.by_filename = dict()
@@ -32,9 +33,9 @@ class IndexStore:
         by_hash_copy = dict()
         by_filename_copy = dict()
         for key, val in self.by_hash.items():
-            by_hash_copy[key] = list(val)
+            by_hash_copy[key] = sorted(val)
         for key, val in self.by_filename.items():
-            by_filename_copy[key] = list(val)
+            by_filename_copy[key] = sorted(val)
         return {
             pdc.KEY_BY_PATH: by_path_copy,
             pdc.KEY_BY_HASH: by_hash_copy,
@@ -42,15 +43,15 @@ class IndexStore:
         }
 
     def save(self, path: pds.Path) -> str: 
-        with open(path, "w") as out_file:
+        with open(path, "w") as out_file:  # TODO: should use Platform
             json.dump(obj=self._as_dict(), fp=out_file, indent=2, sort_keys=True)
 
-    def load(path: pds.Path) -> None:
-        index_store = IndexStore()
-        if not pds.PathExists(path):
+    def load(path: pds.Path, platform: pds.Platform) -> None:
+        index_store = IndexStore(platform)
+        if not platform.PathExists(path):
             print("WARNING: No JSON file found. Starting new one.")
             return index_store
-        with open(path, "r") as in_file:
+        with open(path, "r") as in_file:  # TODO: should use Platform
             index_store_dict = json.load(fp=in_file)
             index_store.by_path = index_store_dict[pdc.KEY_BY_PATH]
             index_store.by_hash = index_store_dict[pdc.KEY_BY_HASH]

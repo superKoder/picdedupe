@@ -2,6 +2,8 @@
 
 from picdeduper import picdeduper as pd
 from picdeduper.indexstore import IndexStore
+from picdeduper import platform as pds
+from picdeduper import fingerprinting as pdf
 
 import argparse
 
@@ -56,22 +58,26 @@ def main():
     collection_start_dir = args.collection_start_dir
     json_path = args.json_file_path
 
+    platform = pds.Platform()
+    fingerprinter = pdf.Fingerprinter(platform)
+    picdeduper = pd.PicDeduper(platform, fingerprinter)
+
     print(f"Will load IndexStore from {json_path} if available.")
-    index_store = IndexStore.load(json_path)
+    index_store = IndexStore.load(json_path, platform)
     print("Done.")
 
     if collection_start_dir:
         print(f"Indexing collection at {collection_start_dir}...")
-        pd.index_established_collection_dir(index_store, collection_start_dir)
+        picdeduper.index_established_collection_dir(index_store, collection_start_dir)
         print("Done.")
 
-        print(f"Saving IndexStore to {json_path}...")
-        index_store.save(json_path)
-        print("Done.")
+    print(f"Saving IndexStore to {json_path}...")
+    index_store.save(json_path)
+    print("Done.")
 
     if candidate_start_dir:
         print(f"Checking candidates at {candidate_start_dir}...")
-        pd.evaluate_candidate_dir(index_store, candidate_start_dir)
+        picdeduper.evaluate_candidate_dir(index_store, candidate_start_dir)
         print("Done.")
 
 if __name__ == "__main__":
