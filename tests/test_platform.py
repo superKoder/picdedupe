@@ -2,6 +2,7 @@ import unittest
 
 from picdeduper import platform as pds
 
+
 class PlatformTests(unittest.TestCase):
 
     def test_is_picture_file(self):
@@ -54,7 +55,7 @@ class PlatformTests(unittest.TestCase):
         platform.configure_raw_stdout_of(cmd_line, b"1234DeadBead9876\n")
 
         output = platform.file_md5_hash("/test/testfile.tst")
-        
+
         self.assertTrue(cmd_line in platform.called_cmd_lines)
         self.assertEqual(output, "1234DeadBead9876")
 
@@ -64,6 +65,6 @@ class PlatformTests(unittest.TestCase):
         platform.configure_raw_stdout_of(cmd_line, b"1234DeadBead9876 */test/testfile.tst\n")
 
         output = platform.file_sha256_hash("/test/testfile.tst")
-        
+
         self.assertTrue(cmd_line in platform.called_cmd_lines)
         self.assertEqual(output, "1234DeadBead9876")

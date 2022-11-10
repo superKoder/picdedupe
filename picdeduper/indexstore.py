@@ -4,6 +4,7 @@ from typing import Dict, List
 from picdeduper import common as pdc
 from picdeduper import platform as pds
 
+
 class IndexStore:
 
     def __init__(self, platform: pds.Platform) -> None:
@@ -28,8 +29,8 @@ class IndexStore:
         filename = pds.path_filename(path)
         self._path_set_for_filename(filename).add(path)
 
-    def _as_dict(self) -> Dict[str,List]: 
-        by_path_copy = self.by_path # avoiding redundant copy
+    def _as_dict(self) -> Dict[str, List]:
+        by_path_copy = self.by_path  # avoiding redundant copy
         by_hash_copy = dict()
         by_filename_copy = dict()
         for key, val in self.by_hash.items():
@@ -42,7 +43,7 @@ class IndexStore:
             pdc.KEY_BY_FILENAME: by_filename_copy,
         }
 
-    def save(self, path: pds.Path) -> str: 
+    def save(self, path: pds.Path) -> str:
         json_string = json.dumps(obj=self._as_dict(), indent=2, sort_keys=True)
         self.platform.write_text_file(path, json_string)
 
@@ -61,6 +62,7 @@ class IndexStore:
         for key in index_store.by_filename:
             index_store.by_filename[key] = set(index_store.by_filename[key])
         return index_store
+
 
 def load(path: pds.Path) -> None:
     return IndexStore.load(path)

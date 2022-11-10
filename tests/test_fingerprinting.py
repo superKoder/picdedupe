@@ -3,6 +3,7 @@ import unittest
 from picdeduper import platform as pds
 from picdeduper import fingerprinting as pdf
 
+
 class FingerprintTests(unittest.TestCase):
 
     # TODO: Needs more variations of this test
@@ -32,14 +33,14 @@ class FingerprintTests(unittest.TestCase):
             kMDItemPixelHeight                     = 3024
             kMDItemPixelWidth                      = 4032
             """)
-        
+
         fingerprinter = pdf.Fingerprinter(platform)
         result = fingerprinter.quick_image_signature_dict_of(path)
-        
+
         self.assertDictEqual(result, {
-            "file_date": "2019-12-25 03:12:06 +0000", 
+            "file_date": "2019-12-25 03:12:06 +0000",
             "file_size": "4772278",
-            })
+        })
 
     # TODO: Needs more variations of this test
     def test_image_signature_dict_of(self):
@@ -75,9 +76,9 @@ class FingerprintTests(unittest.TestCase):
 
         fingerprinter = pdf.Fingerprinter(platform)
         result = fingerprinter.image_signature_dict_of(path)
-        
+
         self.assertDictEqual(result, {
-            "file_date": "2019-12-25 03:12:06 +0000", 
+            "file_date": "2019-12-25 03:12:06 +0000",
             "file_size": "4772278",
             "file_hash": "01234DeadBead9876",
             "image_angles": "5.43/4.32",

@@ -3,6 +3,7 @@ from picdeduper import fingerprinting as pdf
 from picdeduper import evaluation as pdeval
 from picdeduper import platform as pds
 
+
 class PicDeduper:
 
     def __init__(self, platform: pds.Platform, fingerprinter: pdf.Fingerprinter) -> None:
@@ -11,7 +12,7 @@ class PicDeduper:
 
     def is_processed_file(self, image_path: pds.Path, index_store: IndexStore) -> bool:
         """
-        Returns True if the image's quick signature matches the one we have in the JSON-loaded results. 
+        Returns True if the image's quick signature matches the one we have in the JSON-loaded results.  
         This assumes that no changes were made to the file. 
         This is not necessarily true, though! A hash should be used for certainty.
         """
@@ -61,19 +62,18 @@ class PicDeduper:
             index_store.add(image_path, image_properties)
         print(f"Indexing of {start_dir} is done.")
 
-
     def index_established_collection_dir(self, index_store: IndexStore, start_dir: pds.Path):
         self._index_dir(
-            index_store, 
-            start_dir, 
-            skip_untouched=True, 
+            index_store,
+            start_dir,
+            skip_untouched=True,
             do_evaluation=False,
-            )
+        )
 
     def evaluate_candidate_dir(self, index_store: IndexStore, start_dir: pds.Path):
         self._index_dir(
-            index_store, 
-            start_dir, 
-            skip_untouched=False, 
+            index_store,
+            start_dir,
+            skip_untouched=False,
             do_evaluation=True,
-            )
+        )

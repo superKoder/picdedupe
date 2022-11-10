@@ -1,6 +1,6 @@
 from typing import List, Dict, Set
 
-PropertyDict = Dict[str,str]
+PropertyDict = Dict[str, str]
 
 KEY_FILE_HASH = "file_hash"
 KEY_FILE_DATE = "file_date"
