@@ -81,6 +81,7 @@ class FingerprintTests(unittest.TestCase):
             "file_date": "2019-12-25 03:12:06 +0000",
             "file_size": "4772278",
             "file_hash": "01234DeadBead9876",
+            "file_core_name": "testfile",
             "image_angles": "5.43/4.32",
             "image_camset": "0.0166/1.8/4.25",
             "image_creator": "iPhone 11 Pro/13.4",

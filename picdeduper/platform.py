@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 from abc import ABC, abstractmethod
@@ -11,17 +12,45 @@ PathSet = Set[str]
 CommandLineParts = List[str]
 
 
-def filename_ext(filename: Filename) -> str:
-    parts = os.path.splitext(filename)
-    return parts[1] if len(parts) == 2 else ""
-
+def path_filename(path: Path) -> Filename:
+    return os.path.basename(path)
 
 def path_join(dir: Path, filename: Path) -> Path:
     return os.path.join(dir, filename)
 
+def filename_ext(filename: Filename) -> str:
+    return os.path.splitext(filename)[1]
 
-def path_filename(path: Path) -> Filename:
-    return os.path.basename(path)
+def filename_cut_ext(filename: Filename) -> str:
+    return os.path.splitext(os.path.basename(filename))[0]
+
+def original_path_if_copied_path(path: Path) -> str:
+    """
+    Returns the most likely original path/filename of a copy.
+      e.g. 'file 1.ext' would return 'file.ext'
+      e.g. 'file 2.ext' would return 'file.ext'
+      e.g. 'file copy.ext' would return 'file.ext'
+      e.g. 'file copy 2.ext' would return 'file.ext'
+    """
+    if not " " in path:
+        return path
+    core_filename, ext = os.path.splitext(path)
+    if " copy" in path:
+        RE_CORE_FILENAME_CUT_COPY = re.compile("\scopy(?:\s\d+)?$")
+        return re.sub(RE_CORE_FILENAME_CUT_COPY, "", core_filename) + ext
+    RE_CORE_FILENAME_CUT_NUM = re.compile("\s\d+$")
+    return re.sub(RE_CORE_FILENAME_CUT_NUM, "", core_filename) + ext
+    
+
+def path_core_filename(path: Path) -> Filename:
+    """
+    Returns the core original filename of a path
+      e.g. '/path/to/filename.jpg' returns 'filename'
+      e.g. '/path/to/filename.heic' returns 'filename'
+      e.g. '/path/to/filename 1.ext' returns 'filename'
+      e.g. '/path/to/filename copy.ext' returns 'filename'
+    """
+    return filename_cut_ext(original_path_if_copied_path(path))
 
 
 class Platform(ABC):

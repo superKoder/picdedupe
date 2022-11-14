@@ -32,11 +32,13 @@ class PicDeduper:
                 print(f"Skipping untouched: {image_path}")
                 continue
 
-            print(f"Processing image: {image_path}")
+            # print(f"Processing image: {image_path}")
             image_properties = self.fingerprinter.image_signature_dict_of(image_path)
 
             if do_evaluation:
                 result = pdeval.evaluate(image_path, image_properties, index_store)
+                if result.is_completely_unique():
+                    print(f". UNIQ . {image_path}")
 
                 # TODO: Make evaluation() aware of weak data
                 # TODO: Detect .mov for .jpg (on creator + date + filename?)
@@ -49,6 +51,8 @@ class PicDeduper:
 
                 if result.has_image_property_dupes():
                     print(f"? SAME ? {image_path} is an image dupe of {result.paths_with_same_image_properties()}")
+                if result.has_core_filename_dupes():
+                    print(f"? NAME ? {image_path} shares the name of {result.paths_with_same_core_filename()}")
 
                     # TODO: IF "better version" of same filename minus ext:
                     # TODO:   Add(replace) file in same path
