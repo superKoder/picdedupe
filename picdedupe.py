@@ -4,6 +4,7 @@ from picdeduper import picdeduper as pd
 from picdeduper.indexstore import IndexStore
 from picdeduper import platform as pds
 from picdeduper import fingerprinting as pdf
+from picdeduper import fixit # TODO
 
 import argparse
 
@@ -60,7 +61,8 @@ def main():
 
     platform = pds.MacOSPlatform()
     fingerprinter = pdf.Fingerprinter(platform)
-    picdeduper = pd.PicDeduper(platform, fingerprinter)
+    fixit_processor = fixit.CommandLineFixItProcessor()
+    picdeduper = pd.PicDeduper(platform, fingerprinter, fixit_processor)
 
     print(f"Will load IndexStore from {json_path} if available.")
     index_store = IndexStore.load(json_path, platform)

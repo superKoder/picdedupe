@@ -1,14 +1,15 @@
 from picdeduper.indexstore import IndexStore
 from picdeduper import fingerprinting as pdf
+from picdeduper import fixit as fixits
 from picdeduper import evaluation as pdeval
 from picdeduper import platform as pds
 
-
 class PicDeduper:
 
-    def __init__(self, platform: pds.Platform, fingerprinter: pdf.Fingerprinter) -> None:
+    def __init__(self, platform: pds.Platform, fingerprinter: pdf.Fingerprinter, fixit_processor: fixits.FixItProcessor) -> None:
         self.platform = platform
         self.fingerprinter = fingerprinter
+        self.fixit_processor = fixit_processor
 
     def is_processed_file(self, image_path: pds.Path, index_store: IndexStore) -> bool:
         """
@@ -37,17 +38,18 @@ class PicDeduper:
 
             if do_evaluation:
                 result = pdeval.evaluate(image_path, image_properties, index_store)
-                if result.is_completely_unique():
-                    print(f". UNIQ . {image_path}")
 
                 # TODO: Make evaluation() aware of weak data
                 # TODO: Detect .mov for .jpg (on creator + date + filename?)
 
                 if result.has_hash_dupes():
                     print(f"! DUPE ! {image_path} is a file dupe of {result.paths_with_same_hash()}")
+                    fixit = fixits.ExactDupeFixIt(image_path, result.paths_with_same_hash())
                     # TODO: IF DUPE *AND* SAME:
                     # TODO:   Move to ./DUPES
                     # TODO:   Add a ./DUPES/{filename}.txt with the original
+                    if self.fixit_processor.process(fixit): 
+                        continue
 
                 if result.has_image_property_dupes():
                     print(f"? SAME ? {image_path} is an image dupe of {result.paths_with_same_image_properties()}")
@@ -63,6 +65,7 @@ class PicDeduper:
                     # TODO:   Move to ./SIMILAR
                     # TODO:   Add a ./SIMILAR/{filename}.txt with original
 
+                print(f". UNIQ . {image_path}")
             index_store.add(image_path, image_properties)
         print(f"Indexing of {start_dir} is done.")
 
