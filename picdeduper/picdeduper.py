@@ -1,6 +1,6 @@
 from picdeduper.indexstore import IndexStore
 from picdeduper import fingerprinting as pdf
-from picdeduper import fixit as fixits
+from picdeduper import fixits as fixits
 from picdeduper import evaluation as pdeval
 from picdeduper import platform as pds
 
@@ -44,7 +44,7 @@ class PicDeduper:
 
                 if result.has_hash_dupes():
                     print(f"! DUPE ! {image_path} is a file dupe of {result.paths_with_same_hash()}")
-                    fixit = fixits.ExactDupeFixIt(image_path, result.paths_with_same_hash())
+                    fixit = fixits.ExactDupeFixIt(self.platform, image_path, result.paths_with_same_hash())
                     # TODO: IF DUPE *AND* SAME:
                     # TODO:   Move to ./DUPES
                     # TODO:   Add a ./DUPES/{filename}.txt with the original

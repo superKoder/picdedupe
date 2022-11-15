@@ -11,7 +11,6 @@ PathList = List[str]
 PathSet = Set[str]
 CommandLineParts = List[str]
 
-
 def path_filename(path: Path) -> Filename:
     return os.path.basename(path)
 
@@ -53,10 +52,55 @@ def path_core_filename(path: Path) -> Filename:
     return filename_cut_ext(original_path_if_copied_path(path))
 
 
+class Style:
+    RESET = "\033[0m"
+
+    BLACK = "\033[0;30m"
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+    BROWN = "\033[0;33m"
+    BLUE = "\033[0;34m"
+    PURPLE = "\033[0;35m"
+    CYAN = "\033[0;36m"
+    LIGHT_GRAY = "\033[0;37m"
+    DARK_GRAY = "\033[1;30m"
+    LIGHT_RED = "\033[1;31m"
+    LIGHT_GREEN = "\033[1;32m"
+    YELLOW = "\033[1;33m"
+    LIGHT_BLUE = "\033[1;34m"
+    LIGHT_PURPLE = "\033[1;35m"
+    LIGHT_CYAN = "\033[1;36m"
+    LIGHT_WHITE = "\033[1;37m"
+
+    BOLD = "\033[1m"
+    FAINT = "\033[2m"
+    ITALIC = "\033[3m"
+    UNDERLINE = "\033[4m"
+    BLINK = "\033[5m"
+    NEGATIVE = "\033[7m"
+    CROSSED = "\033[9m"
+
+    LIGHT_BLUE = "\033[4;34m"
+
+    def bold(txt: str) -> str:
+        return f"{Style.BOLD}{txt}{Style.RESET}"
+    def attention(txt: str) -> str:
+        return f"{Style.RED}{Style.NEGATIVE} {txt.upper()} {Style.RESET}"
+    def link(txt: str) -> str:
+        return f"{Style.LIGHT_BLUE}{txt}{Style.RESET}"
+    def highlight(txt: str) -> str:
+        return f"{Style.YELLOW}{txt}{Style.RESET}"
+    def negative(txt: str) -> str:
+        return f"{Style.NEGATIVE}{txt}{Style.RESET}"
+
 class Platform(ABC):
 
     @abstractmethod
     def path_exists(self, path: Path) -> bool:
+        pass
+
+    @abstractmethod
+    def make_sure_path_exists(self, path: Path):
         pass
 
     @abstractmethod
@@ -130,6 +174,10 @@ class MacOSPlatform(Platform):
     def path_exists(self, path: Path) -> bool:
         return os.path.exists(path)
 
+    def make_sure_path_exists(self, path: Path):
+        if not self.path_exists(path):
+            os.makedirs(path)
+
     def read_text_file(self, path: Path) -> str:
         with open(path, "r") as input_file:
             return input_file.read()
@@ -176,6 +224,9 @@ class FakePlatform(Platform):
         if not path in self.existing_paths:
             raise f"Not configured: Path exists: {path}"
         return self.existing_paths[path]
+
+    def make_sure_path_exists(self, path: Path):
+        self.configure_path_exists(path, True)
 
     def configure_text_file(self, path: Path, content: str) -> None:
         self.text_files[path] = content
