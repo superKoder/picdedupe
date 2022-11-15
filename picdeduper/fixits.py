@@ -248,7 +248,7 @@ class CommandLineFixItProcessor(FixItProcessor):
         if type(element) == FixItDescriptionBoldTextElement:
             return pds.Style.bold(txt.upper())
         if type(element) == FixItDescriptionFilePathElement:
-            return pds.Style.link(txt)
+            return pds.Style.link(element.get_link())
         if type(element) == FixItDescriptionDangerousTextElement:
             return pds.Style.attention(txt)
         return txt
