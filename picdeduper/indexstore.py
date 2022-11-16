@@ -12,6 +12,8 @@ class IndexStore:
         self.by_path = dict()
         self.by_hash = dict()
         self.by_core_filename = dict()
+        self.oldest_image_date = "9999-99-99 99:99:99 +9999"
+        self.newest_image_date = "0000-00-00 00:00:00 +0000"
 
     def _pathset_for_hash(self, hash_str: str) -> pds.PathSet:
         if not hash_str in self.by_hash:
@@ -24,9 +26,13 @@ class IndexStore:
         return self.by_core_filename[filename]
 
     def add(self, path: pds.Path, image_properties: pdc.PropertyDict):
+        print(f"Indexed: {path}")
+        image_date = image_properties[pdc.KEY_IMAGE_DATE]
+        if image_date:
+            self.oldest_image_date = min(self.oldest_image_date, image_date)
+            self.newest_image_date = max(self.newest_image_date, image_date)
         self.by_path[path] = image_properties
         self._pathset_for_hash(image_properties[pdc.KEY_FILE_HASH]).add(path)
-        # filename = pds.filename_cut_ext(pds.filename_likely_original(pds.path_filename(path)))
         core_filename = pds.path_core_filename(path)
         self._pathset_for_core_filename(core_filename).add(path)
 
@@ -42,6 +48,10 @@ class IndexStore:
             pdc.KEY_BY_PATH: by_path_copy,
             pdc.KEY_BY_HASH: by_hash_copy,
             pdc.KEY_BY_FILENAME: by_filename_copy,
+            pdc.KEY_IMAGE_DATE_STATS: {
+                pdc.KEY_OLDEST: self.oldest_image_date,
+                pdc.KEY_NEWEST: self.newest_image_date,
+            },
         }
 
     def save(self, path: pds.Path) -> str:
