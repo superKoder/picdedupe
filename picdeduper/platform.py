@@ -2,6 +2,8 @@ import os
 import re
 import subprocess
 
+from picdeduper import time as pdt
+
 from abc import ABC, abstractmethod
 from typing import Dict, List, Set
 
@@ -119,6 +121,10 @@ class Platform(ABC):
         """Returns stringified version of _byte_stdout_of()"""
         return self.raw_stdout_of(cmd_parts).decode("utf-8").strip()
 
+    @abstractmethod
+    def set_mtime(self, path: Path, timestamp: pdt.Timestamp) -> None:
+        pass
+
     def _openssl_digest(self, algorithm: str, path: Path) -> str:
         parts = self.stdout_of(["openssl", algorithm, "-r", path]).split(" ")
         if len(parts) == 0:
@@ -190,6 +196,11 @@ class MacOSPlatform(Platform):
         """Returns stdout of command line, in raw bytes"""
         return subprocess.run(cmd_parts, stdout=subprocess.PIPE).stdout
 
+    def set_mtime(self, path: Path, timestamp: pdt.Timestamp) -> None:
+        atime = os.stat(path).st_atime
+        mtime = timestamp
+        os.utime(path, times=(atime, mtime))
+
     def _every_image_files_path(self, io_path_list: PathList, dir_path: Path):
         """Recursive part of every_image_files_path()"""
         for root, subdirs, filenames in os.walk(dir_path):
@@ -216,6 +227,7 @@ class FakePlatform(Platform):
         self.catchall_raw_cmd_output: bytes = None
         self.image_files: Dict[Path, List[Path]] = dict()
         self.called_cmd_lines = list()
+        self.mtimes: Dict[Path, pdt.Timestamp] = dict()
 
     def configure_path_exists(self, path: Path, value: bool) -> None:
         self.existing_paths[path] = value
@@ -254,6 +266,9 @@ class FakePlatform(Platform):
         if not cmd_line in self.raw_cmd_output:
             return self.catchall_raw_cmd_output
         return self.raw_cmd_output[cmd_line]
+
+    def set_mtime(self, path: Path, timestamp: pdt.Timestamp) -> None:
+        self.mtimes[path] = timestamp
 
     def configure_every_image_files_path(self, dir_path: Path, paths: PathList):
         self.image_files[dir_path] = paths

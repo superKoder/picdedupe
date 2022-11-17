@@ -42,6 +42,12 @@ class PicDeduper:
                 # TODO: Make evaluation() aware of weak data
                 # TODO: Detect .mov for .jpg (on creator + date + filename?)
 
+                if result.has_incorrect_file_time():
+                    file_ts, image_ts = result.incorrect_time_tuple
+                    fixit = fixits.WrongFileTimeFixIt(self.platform, image_path, file_ts, image_ts)
+                    self.fixit_processor.process(fixit)
+                    # intentional fallthrough
+
                 if result.has_hash_dupes():
                     print(f"! DUPE ! {image_path} is a file dupe of {result.paths_with_same_hash()}")
                     fixit = fixits.ExactDupeFixIt(self.platform, image_path, result.paths_with_same_hash())
@@ -53,9 +59,6 @@ class PicDeduper:
 
                 if result.has_image_property_dupes():
                     print(f"? SAME ? {image_path} is an image dupe of {result.paths_with_same_image_properties()}")
-                if result.has_core_filename_dupes():
-                    print(f"? NAME ? {image_path} shares the name of {result.paths_with_same_core_filename()}")
-
                     # TODO: IF "better version" of same filename minus ext:
                     # TODO:   Add(replace) file in same path
                     # TODO:   Rename worse version as filename.heic.jpg
@@ -64,6 +67,21 @@ class PicDeduper:
                     # TODO: If differently named (or not better):
                     # TODO:   Move to ./SIMILAR
                     # TODO:   Add a ./SIMILAR/{filename}.txt with original
+                    continue
+
+                if result.has_core_filename_dupes():
+                    print(f"? NAME ? {image_path} shares the name of {result.paths_with_same_core_filename()}")
+                    print(f"? SAME ? {image_path} is an image dupe of {result.paths_with_same_image_properties()}")
+                    # TODO: IF "better version" of same filename minus ext:
+                    # TODO:   Add(replace) file in same path
+                    # TODO:   Rename worse version as filename.heic.jpg
+                    # TODO:   Move to ./ENHANCEMENTS
+
+                    # TODO: If differently named (or not better):
+                    # TODO:   Move to ./SIMILAR
+                    # TODO:   Add a ./SIMILAR/{filename}.txt with original
+                    continue
+
 
                 print(f". UNIQ . {image_path}")
             index_store.add(image_path, image_properties)

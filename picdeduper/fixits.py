@@ -1,6 +1,7 @@
 from picdeduper import common as pdc
 from picdeduper import platform as pds
 from picdeduper.bimap import BiMap
+from picdeduper import time as pdt
 
 from abc import ABC, abstractmethod
 from typing import List, Dict
@@ -41,7 +42,14 @@ class FixItDescriptionDangerousTextElement(FixItDescriptionBoldTextElement):
     pass
 
 
-class FixItDescriptionFilePathElement(FixItDescriptionElement):
+class FixItDescriptionValueElement(FixItDescriptionElement):
+    def has_link(self) -> bool:
+        return False
+
+    def get_link(self) -> str:
+        return None
+
+class FixItDescriptionFilePathElement(FixItDescriptionValueElement):
     def __init__(self, path: pds.Path, label: str = None) -> None:
         super().__init__(path)
         self.path = path
@@ -83,6 +91,13 @@ class FixItAction(ABC):
         pass
 
 
+class BasePlatformFixItaction(FixItAction):
+    """Abstract base class for FixItActions that rely on Platform"""
+    def __init__(self, platform: pds.Platform) -> None:
+        super().__init__()
+        self.platform = platform
+
+
 class DoNothingAction(FixItAction):
 
     def __init__(self) -> None:
@@ -94,12 +109,11 @@ class DoNothingAction(FixItAction):
         pass
 
 
-class FixItMoveFileAction(FixItAction):
+class FixItMoveFileAction(BasePlatformFixItaction):
     """Moves a file to another location"""
 
     def __init__(self, platform: pds.Platform, path: pds.Path, to_dir: pds.Path) -> None:
-        super().__init__()
-        self.platform = platform
+        super().__init__(platform)
         self.from_path = path
         self.to_dir = to_dir
         assert platform.path_exists(self.from_path)
@@ -128,6 +142,26 @@ class FixItSoftDeleteFileAction(FixItMoveFileAction):
         self.description.add(FixItDescriptionTextElement("(by moving it to"))
         self.description.add(FixItDescriptionFilePathElement(self.to_dir))
         self.description.add(FixItDescriptionTextElement(")"))
+
+
+class ChangeFileMTimeAction(BasePlatformFixItaction):
+    """Changes the mtime of a file"""
+
+    def __init__(self, platform: pds.Platform, path: pds.Path, ts: pdt.Timestamp) -> None:
+        super().__init__(platform)
+        self.path = path
+        self.timestamp = ts
+        assert platform.path_exists(self.path)
+        self.description.clear()
+        self.description.add(FixItDescriptionDangerousTextElement("Update mtime"))
+        self.description.add(FixItDescriptionTextElement("of"))
+        self.description.add(FixItDescriptionFilePathElement(self.path))
+        self.description.add(FixItDescriptionTextElement("to"))
+        self.description.add(FixItDescriptionValueElement(pdt.string_for_timestamp(ts)))
+
+    def do_it(self) -> bool:
+        assert self.platform.path_exists(self.path)
+        self.platform.set_mtime(self.path, self.timestamp)
 
 
 class FixIt(ABC):
@@ -159,8 +193,20 @@ class ExactDupeFixIt(FixIt):
         self.actions.append(DoNothingAction())
 
 
-class WrongDateFixIt(FixIt):
-    pass
+class WrongFileTimeFixIt(FixIt):
+    
+    def __init__(self, platform: pds.Platform, path: pds.Path, file_ts: pdt.Timestamp, image_ts: pdt.Timestamp) -> None:
+        super().__init__()
+        self.description.add(FixItDescriptionTextElement("Inconsistent times"))
+        self.description.add(FixItDescriptionTextElement("at"))
+        self.description.add(FixItDescriptionFilePathElement(path))
+        self.description.add(FixItDescriptionTextElement("(image:"))
+        self.description.add(FixItDescriptionValueElement(pdt.string_for_timestamp(file_ts)))
+        self.description.add(FixItDescriptionTextElement("!= file:"))
+        self.description.add(FixItDescriptionValueElement(pdt.string_for_timestamp(image_ts)))
+        self.description.add(FixItDescriptionTextElement(")"))
+        self.actions.append(ChangeFileMTimeAction(platform, path, image_ts))
+        self.actions.append(DoNothingAction())
 
 
 class SimilarImageFixIt(FixIt):
@@ -205,9 +251,9 @@ class CommandLineFixItProcessor(FixItProcessor):
     on the command line.
     """
     KEYB_KEY_FOR_ACTION_TYPE = BiMap({
-        FixItSoftDeleteFileAction  : "D",
-        FixItMoveFileAction        : "M",
-        DoNothingAction            : "",
+        FixItSoftDeleteFileAction    : "D",
+        ChangeFileMTimeAction   : "F",
+        DoNothingAction              : "",
     })
 
     def __init__(self) -> None:
@@ -217,7 +263,7 @@ class CommandLineFixItProcessor(FixItProcessor):
     def _keyb_key_for_action_type(self, action_type: type, pos: int) -> str:
         if action_type in type(self).KEYB_KEY_FOR_ACTION_TYPE:
             return type(self).KEYB_KEY_FOR_ACTION_TYPE[action_type]
-        return pos
+        return str(pos)
 
     def _action_type_for_keyb_key(self, keyb_key: str) -> type:
         if not keyb_key in type(self).KEYB_KEY_FOR_ACTION_TYPE:
@@ -251,6 +297,8 @@ class CommandLineFixItProcessor(FixItProcessor):
             return pds.Style.link(element.get_link())
         if type(element) == FixItDescriptionDangerousTextElement:
             return pds.Style.attention(txt)
+        if type(element) == FixItDescriptionValueElement:
+            return pds.Style.highlight(txt)
         return txt
 
     def _pretty_description(self, description: FixItDescription) -> str:
