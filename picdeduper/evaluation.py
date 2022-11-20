@@ -98,6 +98,7 @@ def evaluate(candidate_image_path: pds.Path, candidate_image_properties: pdc.Pro
             index_store.by_core_filename[candidate_core_filename])
 
     for other_image_path, other_image_properties in index_store.by_path.items():
+        if other_image_path == candidate_image_path: continue
         if _is_likely_same_image(candidate_image_properties, other_image_properties):
             result.add_same_image_properties(other_image_path)
 
