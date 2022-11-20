@@ -7,6 +7,7 @@ from picdeduper import fingerprinting as pdf
 from picdeduper import fixits # TODO
 
 import argparse
+import sys
 
 
 def main():
@@ -63,6 +64,10 @@ def main():
     fingerprinter = pdf.Fingerprinter(platform)
     fixit_processor = fixits.CommandLineFixItProcessor()
     picdeduper = pd.PicDeduper(platform, fingerprinter, fixit_processor)
+
+    if not collection_start_dir and json_path and not platform.path_exists(json_path):
+        print(f"-error: Cannot find {json_path}")
+        sys.exit(1)
 
     print(f"Will load IndexStore from {json_path} if available.")
     index_store = IndexStore.load(json_path, platform)
