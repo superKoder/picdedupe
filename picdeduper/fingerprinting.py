@@ -1,6 +1,8 @@
 from picdeduper import common as pdc
 from picdeduper import platform as pds
 
+from typing import Dict
+
 MDLS_KEYS = []
 
 # File size:
@@ -136,7 +138,7 @@ class Fingerprinter:
         self.platform = platform
         assert self.platform.is_mac_os()
 
-    def _properties_of_image_file(self, path: pds.Path) -> pdc.PropertyDict:
+    def _mdls_properties_of_image_file(self, path: pds.Path) -> pdc.PropertyDict:
         """Returns a list of properties that identify the identitiy of a file"""
         params = [["-name", x] for x in MDLS_KEYS]
 
@@ -159,23 +161,39 @@ class Fingerprinter:
         return output_dict
 
     def quick_image_signature_dict_of(self, image_path: pds.Path) -> pdc.PropertyDict:
-        image_properties = self._properties_of_image_file(image_path)
+        mdls_properties = self._mdls_properties_of_image_file(image_path)
         return {
-            pdc.KEY_FILE_DATE: _file_date_string(image_properties),
-            pdc.KEY_FILE_SIZE: _file_size_string(image_properties),
+            pdc.KEY_FILE_DATE: _file_date_string(mdls_properties),
+            pdc.KEY_FILE_SIZE: _file_size_string(mdls_properties),
         }
 
-    def image_signature_dict_of(self, image_path: pds.Path) -> pdc.PropertyDict:
-        image_properties = self._properties_of_image_file(image_path)
-        return {
+    def image_signature_dict_of(self, image_path: pds.Path, io_image_properties: pdc.PropertyDict) -> None:
+        mdls_properties = self._mdls_properties_of_image_file(image_path)
+        io_image_properties.update({
             pdc.KEY_FILE_CORE_NAME: pds.path_core_filename(image_path),
             pdc.KEY_FILE_HASH: self.platform.quick_file_hash(image_path),
-            pdc.KEY_FILE_DATE: _file_date_string(image_properties),
-            pdc.KEY_FILE_SIZE: _file_size_string(image_properties),
-            pdc.KEY_IMAGE_RES: _image_resolution_string(image_properties),
-            pdc.KEY_IMAGE_LOC: _image_location_string(image_properties),
-            pdc.KEY_IMAGE_CREATOR: _image_creator_string(image_properties),
-            pdc.KEY_IMAGE_DATE: _image_date_string(image_properties),
-            pdc.KEY_IMAGE_ANGLES: _image_angles_string(image_properties),
-            pdc.KEY_IMAGE_CAMSET: _image_camera_settings_string(image_properties),
-        }
+            pdc.KEY_FILE_DATE: _file_date_string(mdls_properties),
+            pdc.KEY_FILE_SIZE: _file_size_string(mdls_properties),
+            pdc.KEY_IMAGE_RES: _image_resolution_string(mdls_properties),
+            pdc.KEY_IMAGE_LOC: _image_location_string(mdls_properties),
+            pdc.KEY_IMAGE_CREATOR: _image_creator_string(mdls_properties),
+            pdc.KEY_IMAGE_DATE: _image_date_string(mdls_properties),
+            pdc.KEY_IMAGE_ANGLES: _image_angles_string(mdls_properties),
+            pdc.KEY_IMAGE_CAMSET: _image_camera_settings_string(mdls_properties),
+        })
+
+    def double_check_dupes(self, images_properties_dict: Dict[pds.Path, pdc.PropertyDict]):
+        second_hash_check = None
+        for path, images_properties in images_properties_dict.items():
+            second_hash = (
+                images_properties[pdc.KEY_FILE_SECOND_HASH] 
+                if pdc.KEY_FILE_SECOND_HASH in images_properties 
+                else self.platform.second_file_hash(path)
+            )
+            images_properties[pdc.KEY_FILE_SECOND_HASH] = second_hash
+            if not second_hash_check:
+                second_hash_check = second_hash
+            if second_hash != second_hash_check:
+                return False
+        return True
+            

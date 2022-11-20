@@ -75,7 +75,8 @@ class FingerprintTests(unittest.TestCase):
             b"01234DeadBead9876")
 
         fingerprinter = pdf.Fingerprinter(platform)
-        result = fingerprinter.image_signature_dict_of(path)
+        result = dict()
+        fingerprinter.image_signature_dict_of(path, result)
 
         self.assertDictEqual(result, {
             "file_date": "2019-12-25 03:12:06 +0000",

@@ -36,6 +36,17 @@ class IndexStore:
         core_filename = pds.path_core_filename(path)
         self._pathset_for_core_filename(core_filename).add(path)
 
+    def image_properties_for_path(self, path: pds.Path) -> pdc.PropertyDict:
+        if not path in self.by_path:
+            self.by_path[path] = dict()
+        return self.by_path[path]
+
+    def image_properties_dict_for_paths(self, paths: pds.PathSet) -> Dict[pds.Path, pdc.PropertyDict]:
+        output: Dict[pds.Path, pdc.PropertyDict] = dict()
+        for path in paths:
+            output[path] = self.image_properties_for_path(path)
+        return output
+
     def _as_dict(self) -> Dict[str, List]:
         by_path_copy = self.by_path  # avoiding redundant copy
         by_hash_copy = dict()

@@ -139,6 +139,9 @@ class Platform(ABC):
     def file_sha256_hash(self, path: Path) -> str:
         return self._openssl_digest("sha256", path)
 
+    def file_sha512_hash(self, path: Path) -> str:
+        return self._openssl_digest("sha512", path)
+
     def _file_md4_hash(self, path: Path) -> str:
         """Note: MD4 is known to be insecure, but it fast!"""
         return self._openssl_digest("md4", path)
@@ -148,7 +151,11 @@ class Platform(ABC):
         return self.stdout_of(["md5", "-q", path])
 
     def quick_file_hash(self, path: Path) -> str:
+        # NOTE: MD4 is fast, but SHA256 is actually faster on M1 Macs
         return self._file_md4_hash(path)
+
+    def second_file_hash(self, path: Path) -> str:
+        return self.file_sha512_hash(path)
 
     def is_picture_file(self, filename: Filename) -> bool:
         ext = filename_ext(filename).upper()
@@ -237,7 +244,6 @@ class FakePlatform(Platform):
         self.called_cmd_lines = list()
         self.mtimes: Dict[Path, pdt.Timestamp] = dict()
         self.os_is_mac: bool = True
-        self.same_file_pairs: Dict[(Filename,Filename),bool] = dict()
 
     def configure_is_mac_os(self, value: bool = True):
         self.os_is_mac = value
@@ -253,7 +259,7 @@ class FakePlatform(Platform):
             raise f"Not configured: Path exists: {path}"
         return self.existing_paths[path]
 
-    def make_sure_path_exists(self, path: Path):
+    def make_sure_path_exists(self, path: Path) -> bool:
         self.configure_path_exists(path, True)
 
     def configure_text_file(self, path: Path, content: str) -> None:

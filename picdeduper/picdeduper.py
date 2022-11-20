@@ -34,7 +34,8 @@ class PicDeduper:
                 continue
 
             # print(f"Processing image: {image_path}")
-            image_properties = self.fingerprinter.image_signature_dict_of(image_path)
+            image_properties = index_store.image_properties_for_path(image_path)
+            self.fingerprinter.image_signature_dict_of(image_path, image_properties)
 
             if do_evaluation:
                 result = pdeval.evaluate(image_path, image_properties, index_store)
@@ -49,6 +50,10 @@ class PicDeduper:
                     # intentional fallthrough
 
                 if result.has_hash_dupes():
+                    same_hash_paths = result.paths_with_same_hash()
+                    same_hash_paths.add(image_path)
+                    same_hash_image_properties_dict = index_store.image_properties_dict_for_paths(same_hash_paths)
+                    assert self.fingerprinter.double_check_dupes(same_hash_image_properties_dict)
                     print(f"! DUPE ! {image_path} is a file dupe of {result.paths_with_same_hash()}")
                     fixit = fixits.ExactDupeFixIt(self.platform, image_path, result.paths_with_same_hash())
                     # TODO: IF DUPE *AND* SAME:

@@ -1,10 +1,11 @@
-from typing import List, Dict, Set
+from typing import Dict
 
 PropertyDict = Dict[str, str]
 
-KEY_FILE_HASH = "file_hash"
 KEY_FILE_DATE = "file_date"
 KEY_FILE_SIZE = "file_size"
+KEY_FILE_HASH = "file_hash"
+KEY_FILE_SECOND_HASH = "file_second_hash"
 KEY_FILE_CORE_NAME = "file_core_name" # 'IMG_1234' for 'IMG_1233 copy 1.jpg'
 KEY_IMAGE_DATE = "image_date"
 KEY_IMAGE_RES = "image_res"
