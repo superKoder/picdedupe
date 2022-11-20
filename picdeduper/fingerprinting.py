@@ -134,6 +134,7 @@ class Fingerprinter:
 
     def __init__(self, platform: pds.Platform) -> None:
         self.platform = platform
+        assert self.platform.is_mac_os()
 
     def _properties_of_image_file(self, path: pds.Path) -> pdc.PropertyDict:
         """Returns a list of properties that identify the identitiy of a file"""

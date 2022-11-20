@@ -96,6 +96,7 @@ class BasePlatformFixItaction(FixItAction):
     def __init__(self, platform: pds.Platform) -> None:
         super().__init__()
         self.platform = platform
+        assert self.platform.is_mac_os()
 
 
 class DoNothingAction(FixItAction):

@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import platform
 
 from picdeduper import time as pdt
 
@@ -98,6 +99,10 @@ class Style:
 class Platform(ABC):
 
     @abstractmethod
+    def is_mac_os(self) -> bool:
+        pass
+
+    @abstractmethod
     def path_exists(self, path: Path) -> bool:
         pass
 
@@ -177,6 +182,9 @@ class Platform(ABC):
 
 class MacOSPlatform(Platform):
 
+    def is_mac_os(self) -> bool:
+        return (platform.system() == "Darwin")
+
     def path_exists(self, path: Path) -> bool:
         return os.path.exists(path)
 
@@ -228,6 +236,14 @@ class FakePlatform(Platform):
         self.image_files: Dict[Path, List[Path]] = dict()
         self.called_cmd_lines = list()
         self.mtimes: Dict[Path, pdt.Timestamp] = dict()
+        self.os_is_mac: bool = True
+        self.same_file_pairs: Dict[(Filename,Filename),bool] = dict()
+
+    def configure_is_mac_os(self, value: bool = True):
+        self.os_is_mac = value
+
+    def is_mac_os(self) -> bool:
+        return self.os_is_mac
 
     def configure_path_exists(self, path: Path, value: bool) -> None:
         self.existing_paths[path] = value
