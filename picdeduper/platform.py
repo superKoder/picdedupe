@@ -1,7 +1,8 @@
 import os
+import pathlib
+import platform
 import re
 import subprocess
-import platform
 
 from picdeduper import time as pdt
 
@@ -13,6 +14,7 @@ Path = str
 PathList = List[str]
 PathSet = Set[str]
 CommandLineParts = List[str]
+URI = str
 
 def path_filename(path: Path) -> Filename:
     return os.path.basename(path)
@@ -54,6 +56,9 @@ def path_core_filename(path: Path) -> Filename:
     """
     return filename_cut_ext(original_path_if_copied_path(path))
 
+
+def file_link_for_path(path: Path) -> URI:
+    return pathlib.Path(os.path.abspath(path)).as_uri()
 
 class Style:
     RESET = "\033[0m"

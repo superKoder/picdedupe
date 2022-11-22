@@ -59,7 +59,7 @@ class FixItDescriptionFilePathElement(FixItDescriptionValueElement):
         return True
 
     def get_link(self) -> str:
-        return "file://" + self.path
+        return pds.file_link_for_path(self.path)
 
     def get_label(self) -> str:
         return self.label
