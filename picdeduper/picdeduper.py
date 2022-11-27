@@ -4,6 +4,7 @@ from picdeduper import fixits as fixits
 from picdeduper import evaluation as pdeval
 from picdeduper import platform as pds
 
+
 class PicDeduper:
 
     def __init__(self, platform: pds.Platform, fingerprinter: pdf.Fingerprinter, fixit_processor: fixits.FixItProcessor) -> None:
@@ -59,7 +60,7 @@ class PicDeduper:
                     # TODO: IF DUPE *AND* SAME:
                     # TODO:   Move to ./DUPES
                     # TODO:   Add a ./DUPES/{filename}.txt with the original
-                    if self.fixit_processor.process(fixit): 
+                    if self.fixit_processor.process(fixit):
                         continue
 
                 if result.has_image_property_dupes():
@@ -86,7 +87,6 @@ class PicDeduper:
                     # TODO:   Move to ./SIMILAR
                     # TODO:   Add a ./SIMILAR/{filename}.txt with original
                     continue
-
 
                 print(f". UNIQ . {image_path}")
             index_store.add(image_path, image_properties)

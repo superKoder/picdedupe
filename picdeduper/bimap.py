@@ -3,6 +3,7 @@ class BiMap(dict):
     """
     A dictionary where you can get the key by value and the value by key.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         mirror = dict()

@@ -9,7 +9,7 @@ class EvaluationResult:
         self.same_core_filename = set()
         self.same_hash = set()
         self.same_image_properties = set()
-        self.incorrect_time_tuple = None # (file_date, image_date)
+        self.incorrect_time_tuple = None  # (file_date, image_date)
 
     def add_same_filename(self, path: pds.Path):
         self.same_core_filename.add(path)
@@ -76,12 +76,14 @@ def _is_likely_same_image(a: pdc.PropertyDict, b: pdc.PropertyDict) -> bool:
         _is_equal_property(pdc.KEY_IMAGE_ANGLES, a, b) and
         True)
 
+
 def is_consistent_time(image_properties: pdc.PropertyDict) -> bool:
     if not pdc.KEY_IMAGE_DATE in image_properties:
-        return True # Not really a good situation. But we cannot do better.
+        return True  # Not really a good situation. But we cannot do better.
     return pdt.time_strings_are_same_time(
         image_properties[pdc.KEY_IMAGE_DATE],
         image_properties[pdc.KEY_FILE_DATE])
+
 
 def evaluate(candidate_image_path: pds.Path, candidate_image_properties: pdc.PropertyDict, index_store: IndexStore) -> EvaluationResult:
     result = EvaluationResult()
@@ -98,7 +100,8 @@ def evaluate(candidate_image_path: pds.Path, candidate_image_properties: pdc.Pro
             index_store.by_core_filename[candidate_core_filename])
 
     for other_image_path, other_image_properties in index_store.by_path.items():
-        if other_image_path == candidate_image_path: continue
+        if other_image_path == candidate_image_path:
+            continue
         if _is_likely_same_image(candidate_image_properties, other_image_properties):
             result.add_same_image_properties(other_image_path)
 

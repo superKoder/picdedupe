@@ -22,6 +22,7 @@ class FixItDescriptionElement(ABC):
     def get_link(self) -> str:
         pass
 
+
 class FixItDescriptionTextElement(FixItDescriptionElement):
     def has_link(self) -> bool:
         return False
@@ -37,6 +38,7 @@ class FixItDescriptionBoldTextElement(FixItDescriptionElement):
     def get_link(self) -> str:
         return None
 
+
 class FixItDescriptionDangerousTextElement(FixItDescriptionBoldTextElement):
     """Stronger than bold!"""
     pass
@@ -48,6 +50,7 @@ class FixItDescriptionValueElement(FixItDescriptionElement):
 
     def get_link(self) -> str:
         return None
+
 
 class FixItDescriptionFilePathElement(FixItDescriptionValueElement):
     def __init__(self, path: pds.Path, label: str = None) -> None:
@@ -94,8 +97,10 @@ class FixItAction(ABC):
     def leave_txt_history(self, txt_content: str) -> None:
         pass
 
+
 class BasePlatformFixItaction(FixItAction):
     """Abstract base class for FixItActions that rely on Platform"""
+
     def __init__(self, platform: pds.Platform) -> None:
         super().__init__()
         self.platform = platform
@@ -273,16 +278,16 @@ class CommandLineFixItProcessor(FixItProcessor):
     on the command line.
     """
     KEYB_KEY_FOR_ACTION_TYPE = BiMap({
-        FixItSoftDeleteFileAction    : "D",
-        ChangeFileMTimeAction   : "F",
-        DoNothingAction              : "",
+        FixItSoftDeleteFileAction: "D",
+        ChangeFileMTimeAction: "F",
+        DoNothingAction: "",
     })
 
     FixitConfig = Dict[type, type]
 
     def __init__(self) -> None:
         super().__init__()
-        self.key_action_binding: Dict[type,FixItAction] = dict()
+        self.key_action_binding: Dict[type, FixItAction] = dict()
         self.defaults: CommandLineFixItProcessor.FixitConfig = dict()
 
     def _keyb_key_for_action_type(self, action_type: type, pos: int) -> str:
@@ -310,8 +315,10 @@ class CommandLineFixItProcessor(FixItProcessor):
         self.key_action_binding.clear()
 
     def _pretty_keyb_key(self, keyb_key: str) -> str:
-        if keyb_key == "": return "   ⏎ "
-        if len(keyb_key) == 1: return f" {pds.Style.highlight(keyb_key.upper())} ⏎ "
+        if keyb_key == "":
+            return "   ⏎ "
+        if len(keyb_key) == 1:
+            return f" {pds.Style.highlight(keyb_key.upper())} ⏎ "
         return str + " ⏎"
 
     def _pretty_description_element(self, element: FixItDescriptionElement) -> str:
@@ -349,11 +356,11 @@ class CommandLineFixItProcessor(FixItProcessor):
             if type(action) == default_action_type:
                 print("Auto-selected!")
                 chosen_action = action
-            
+
         while not chosen_action:
             chosen_action = self._action_for_keyb_key(input("Your choice: ").upper())
         print(f"You picked: {self._pretty_description(chosen_action.describe())}")
         chosen_action.do_it()
         chosen_action.leave_txt_history(fixit.describe().as_simple_text())
         print("-- -- -- -- -- -- -- -- -- -- -- --")
-        return True # TODO
+        return True  # TODO

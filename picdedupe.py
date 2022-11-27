@@ -4,7 +4,7 @@ from picdeduper import picdeduper as pd
 from picdeduper.indexstore import IndexStore
 from picdeduper import platform as pds
 from picdeduper import fingerprinting as pdf
-from picdeduper import fixits # TODO
+from picdeduper import fixits  # TODO
 
 import argparse
 import sys

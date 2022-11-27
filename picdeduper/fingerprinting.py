@@ -186,8 +186,8 @@ class Fingerprinter:
         second_hash_check = None
         for path, images_properties in images_properties_dict.items():
             second_hash = (
-                images_properties[pdc.KEY_FILE_SECOND_HASH] 
-                if pdc.KEY_FILE_SECOND_HASH in images_properties 
+                images_properties[pdc.KEY_FILE_SECOND_HASH]
+                if pdc.KEY_FILE_SECOND_HASH in images_properties
                 else self.platform.second_file_hash(path)
             )
             images_properties[pdc.KEY_FILE_SECOND_HASH] = second_hash
@@ -196,4 +196,3 @@ class Fingerprinter:
             if second_hash != second_hash_check:
                 return False
         return True
-            

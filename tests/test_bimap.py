@@ -2,6 +2,7 @@ import unittest
 
 from picdeduper.bimap import BiMap
 
+
 class BiMapTests(unittest.TestCase):
 
     def test_setitem(self):

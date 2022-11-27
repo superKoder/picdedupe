@@ -16,17 +16,22 @@ PathSet = Set[str]
 CommandLineParts = List[str]
 URI = str
 
+
 def path_filename(path: Path) -> Filename:
     return os.path.basename(path)
+
 
 def path_join(dir: Path, filename: Path) -> Path:
     return os.path.join(dir, filename)
 
+
 def filename_ext(filename: Filename) -> str:
     return os.path.splitext(filename)[1]
 
+
 def filename_cut_ext(filename: Filename) -> str:
     return os.path.splitext(os.path.basename(filename))[0]
+
 
 def original_path_if_copied_path(path: Path) -> str:
     """
@@ -44,7 +49,7 @@ def original_path_if_copied_path(path: Path) -> str:
         return re.sub(RE_CORE_FILENAME_CUT_COPY, "", core_filename) + ext
     RE_CORE_FILENAME_CUT_NUM = re.compile("\s\d+$")
     return re.sub(RE_CORE_FILENAME_CUT_NUM, "", core_filename) + ext
-    
+
 
 def path_core_filename(path: Path) -> Filename:
     """
@@ -59,6 +64,7 @@ def path_core_filename(path: Path) -> Filename:
 
 def file_link_for_path(path: Path) -> URI:
     return pathlib.Path(os.path.abspath(path)).as_uri()
+
 
 class Style:
     RESET = "\033[0m"
@@ -92,14 +98,19 @@ class Style:
 
     def bold(txt: str) -> str:
         return f"{Style.BOLD}{txt}{Style.RESET}"
+
     def attention(txt: str) -> str:
         return f"{Style.RED}{Style.NEGATIVE} {txt.upper()} {Style.RESET}"
+
     def link(txt: str) -> str:
         return f"{Style.LIGHT_BLUE}{txt}{Style.RESET}"
+
     def highlight(txt: str) -> str:
         return f"{Style.YELLOW}{txt}{Style.RESET}"
+
     def negative(txt: str) -> str:
         return f"{Style.NEGATIVE}{txt}{Style.RESET}"
+
 
 class Platform(ABC):
 

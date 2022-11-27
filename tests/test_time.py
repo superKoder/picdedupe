@@ -2,6 +2,7 @@ import unittest
 
 from picdeduper import time as pdt
 
+
 class TimeTests(unittest.TestCase):
 
     def test_datetime_for_string(self):
@@ -36,4 +37,3 @@ class TimeTests(unittest.TestCase):
             "2019-06-30 21:17:38 +0000",
             "2019-06-30 23:17:38 +0200",
         ))
-
