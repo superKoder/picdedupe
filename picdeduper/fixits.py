@@ -90,6 +90,9 @@ class FixItAction(ABC):
     def do_it(self) -> bool:
         pass
 
+    @abstractmethod
+    def leave_txt_history(self, txt_content: str) -> None:
+        pass
 
 class BasePlatformFixItaction(FixItAction):
     """Abstract base class for FixItActions that rely on Platform"""
@@ -97,6 +100,18 @@ class BasePlatformFixItaction(FixItAction):
         super().__init__()
         self.platform = platform
         assert self.platform.is_mac_os()
+        self.txt_path: pds.Path = None
+
+    def set_txt_history_path(self, txt_path: pds.Path) -> None:
+        self.txt_path = txt_path
+        if pds.filename_ext(self.txt_path) != ".txt":
+            self.txt_path += ".txt"
+
+    def leave_txt_history(self, txt_content: str) -> None:
+        if self.txt_path:
+            assert pds.filename_ext(self.txt_path) == ".txt"
+            txt_content += "\n" + self.description.as_simple_text() + "\n"
+            self.platform.write_text_file(self.txt_path, txt_content)
 
 
 class DoNothingAction(FixItAction):
@@ -107,6 +122,9 @@ class DoNothingAction(FixItAction):
         self.description.add(FixItDescriptionBoldTextElement("nothing"))
 
     def do_it(self) -> bool:
+        pass
+
+    def leave_txt_history(self, txt_content: str) -> None:
         pass
 
 
@@ -127,6 +145,8 @@ class FixItMoveFileAction(BasePlatformFixItaction):
         assert self.platform.path_exists(self.from_path)
         self.platform.make_sure_path_exists(self.to_dir)
         assert self.platform.path_exists(self.to_dir)
+        to_path = pds.path_join(self.to_dir, pds.path_filename(self.from_path))
+        self.set_txt_history_path(to_path + ".txt")
         cmd = ["mv", self.from_path, self.to_dir]   # [!DFSO!]
         self.platform.stdout_of(cmd)
 
@@ -163,6 +183,7 @@ class ChangeFileMTimeAction(BasePlatformFixItaction):
     def do_it(self) -> bool:
         assert self.platform.path_exists(self.path)
         self.platform.set_mtime(self.path, self.timestamp)
+        self.set_txt_history_path(self.path + ".txt")
 
 
 class FixIt(ABC):
@@ -321,5 +342,6 @@ class CommandLineFixItProcessor(FixItProcessor):
             chosen_action = self._action_for_keyb_key(input("Your choice: ").upper())
         print(f"You picked: {self._pretty_description(chosen_action.describe())}")
         chosen_action.do_it()
+        chosen_action.leave_txt_history(fixit.describe().as_simple_text())
         print("-- -- -- -- -- -- -- -- -- -- -- --")
         return True # TODO
