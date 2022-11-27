@@ -63,6 +63,7 @@ def main():
     platform = pds.MacOSPlatform()
     fingerprinter = pdf.Fingerprinter(platform)
     fixit_processor = fixits.CommandLineFixItProcessor()
+    fixit_processor.configure_fixit_default_actions(fixits.ExactDupeFixIt, fixits.FixItSoftDeleteFileAction)
     picdeduper = pd.PicDeduper(platform, fingerprinter, fixit_processor)
 
     if not collection_start_dir and json_path and not platform.path_exists(json_path):

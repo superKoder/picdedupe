@@ -216,7 +216,7 @@ class ExactDupeFixIt(FixIt):
 
 
 class WrongFileTimeFixIt(FixIt):
-    
+
     def __init__(self, platform: pds.Platform, path: pds.Path, file_ts: pdt.Timestamp, image_ts: pdt.Timestamp) -> None:
         super().__init__()
         self.description.add(FixItDescriptionTextElement("Inconsistent times"))
@@ -278,9 +278,12 @@ class CommandLineFixItProcessor(FixItProcessor):
         DoNothingAction              : "",
     })
 
+    FixitConfig = Dict[type, type]
+
     def __init__(self) -> None:
         super().__init__()
         self.key_action_binding: Dict[type,FixItAction] = dict()
+        self.defaults: CommandLineFixItProcessor.FixitConfig = dict()
 
     def _keyb_key_for_action_type(self, action_type: type, pos: int) -> str:
         if action_type in type(self).KEYB_KEY_FOR_ACTION_TYPE:
@@ -324,8 +327,11 @@ class CommandLineFixItProcessor(FixItProcessor):
         return txt
 
     def _pretty_description(self, description: FixItDescription) -> str:
-        return " ".join([self._pretty_description_element(x) 
-                            for x in description.elements])
+        return " ".join([self._pretty_description_element(x)
+                         for x in description.elements])
+
+    def configure_fixit_default_actions(self, fixit_type: type, fixit_action_type: type):
+        self.defaults[fixit_type] = fixit_action_type
 
     def process(self, fixit: FixIt) -> bool:
         self._reset_keyb_binding()
@@ -333,11 +339,17 @@ class CommandLineFixItProcessor(FixItProcessor):
         print("-- -- -- -- -- -- -- -- -- -- -- --")
         print(f"FIXIT: {description_text}")
         pos = 0
+        chosen_action = None
+        fixit_type = type(fixit)
+        default_action_type = self.defaults[fixit_type] if (fixit_type in self.defaults) else None
         for action in fixit.get_proposed_actions():
             pos += 1
             keyb_key = self._keyb_key_for_action(action, pos)
             print(f" {self._pretty_keyb_key(keyb_key)} : {self._pretty_description(action.describe())}")
-        chosen_action = None
+            if type(action) == default_action_type:
+                print("Auto-selected!")
+                chosen_action = action
+            
         while not chosen_action:
             chosen_action = self._action_for_keyb_key(input("Your choice: ").upper())
         print(f"You picked: {self._pretty_description(chosen_action.describe())}")
