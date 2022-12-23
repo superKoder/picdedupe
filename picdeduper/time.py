@@ -1,27 +1,27 @@
-from datetime import datetime, timezone
+from datetime import datetime
 
 Timestamp = float
 TimeString = str
 
 
-def datetime_for_string(time_string: TimeString) -> datetime:
+def datetime_from_string(time_string: TimeString) -> datetime:
     return datetime.strptime(time_string, "%Y-%m-%d %H:%M:%S %z")
 
 
-def timestamp_for_string(time_string: TimeString) -> Timestamp:
-    return datetime_for_string(time_string).timestamp()
+def timestamp_from_string(time_string: TimeString) -> Timestamp:
+    return datetime_from_string(time_string).timestamp()
 
 
-def datetime_for_timestamp(timestamp: Timestamp) -> datetime:
+def datetime_from_timestamp(timestamp: Timestamp) -> datetime:
     return datetime.utcfromtimestamp(timestamp)
 
 
-def string_for_timestamp(timestamp: Timestamp) -> TimeString:
+def string_from_timestamp(timestamp: Timestamp) -> TimeString:
     """Always returns in UTC"""
-    return datetime_for_timestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S +0000")
+    return datetime_from_timestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S +0000")
 
 
 def time_strings_are_same_time(a: TimeString, b: TimeString):
     if a == b:
         return True
-    return timestamp_for_string(a) == timestamp_for_string(b)
+    return timestamp_from_string(a) == timestamp_from_string(b)

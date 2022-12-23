@@ -106,8 +106,8 @@ def evaluate(candidate_image_path: pds.Path, candidate_image_properties: pdc.Pro
             result.add_same_image_properties(other_image_path)
 
     if not is_consistent_time(candidate_image_properties):
-        file_ts = pdt.timestamp_for_string(candidate_image_properties[pdc.KEY_FILE_DATE])
-        image_ts = pdt.timestamp_for_string(candidate_image_properties[pdc.KEY_IMAGE_DATE])
+        file_ts = pdt.timestamp_from_string(candidate_image_properties[pdc.KEY_FILE_DATE])
+        image_ts = pdt.timestamp_from_string(candidate_image_properties[pdc.KEY_IMAGE_DATE])
         result.set_incorrect_file_time(file_ts, image_ts)
 
     return result

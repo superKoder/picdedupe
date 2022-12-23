@@ -183,7 +183,7 @@ class ChangeFileMTimeAction(BasePlatformFixItaction):
         self.description.add(FixItDescriptionTextElement("of"))
         self.description.add(FixItDescriptionFilePathElement(self.path))
         self.description.add(FixItDescriptionTextElement("to"))
-        self.description.add(FixItDescriptionValueElement(pdt.string_for_timestamp(ts)))
+        self.description.add(FixItDescriptionValueElement(pdt.string_from_timestamp(ts)))
 
     def do_it(self) -> bool:
         assert self.platform.path_exists(self.path)
@@ -228,9 +228,9 @@ class WrongFileTimeFixIt(FixIt):
         self.description.add(FixItDescriptionTextElement("at"))
         self.description.add(FixItDescriptionFilePathElement(path))
         self.description.add(FixItDescriptionTextElement("(image:"))
-        self.description.add(FixItDescriptionValueElement(pdt.string_for_timestamp(file_ts)))
+        self.description.add(FixItDescriptionValueElement(pdt.string_from_timestamp(file_ts)))
         self.description.add(FixItDescriptionTextElement("!= file:"))
-        self.description.add(FixItDescriptionValueElement(pdt.string_for_timestamp(image_ts)))
+        self.description.add(FixItDescriptionValueElement(pdt.string_from_timestamp(image_ts)))
         self.description.add(FixItDescriptionTextElement(")"))
         self.actions.append(ChangeFileMTimeAction(platform, path, image_ts))
         self.actions.append(DoNothingAction())
