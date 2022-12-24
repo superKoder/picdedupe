@@ -2,6 +2,7 @@ from picdeduper import platform as pds
 
 from abc import ABC, abstractmethod
 
+
 class FileGroup(ABC):
     """A file group is one or more files that belong together. 
     For example, a .JPG and a .MOV that make up a "live photo" on iOS. Or a .JPG and its RAW."""
@@ -22,7 +23,7 @@ class FileGroup(ABC):
     def add_file_path(self, path: pds.Path) -> None:
         new_main_file_path = self._determine_main_file_path(path)
         if self.main_path != new_main_file_path:
-            if self.main_path: 
+            if self.main_path:
                 self.supporting_file_paths.add(self.main_path)
             self._remove_supporting_file_path(new_main_file_path)
             self.main_path = new_main_file_path
@@ -36,6 +37,15 @@ class FileGroup(ABC):
         all_files = self.supporting_file_paths
         all_files.add(self.main_path)
         return all_files
+
+    def could_include_path(self, path: pds.Path) -> bool:
+        """Only returns True if the filename could potentially belong in this group"""
+        if not path:
+            return False
+        if not self.main_path:
+            return True
+        return (pds.path_core_filename(self.main_file_path()) ==
+                pds.path_core_filename(path))
 
 
 class PictureFileGroup(FileGroup):
