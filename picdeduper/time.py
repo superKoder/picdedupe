@@ -25,3 +25,15 @@ def time_strings_are_same_time(a: TimeString, b: TimeString):
     if a == b:
         return True
     return timestamp_from_string(a) == timestamp_from_string(b)
+
+def seconds_between_times(a: Timestamp, b: Timestamp):
+    """Params a & b can be either our Timestamp or Python's datetime or time strings"""
+    if isinstance(a, datetime):
+        a = a.timestamp()
+    if isinstance(a, str):
+        a = timestamp_from_string(a)
+    if isinstance(b, datetime):
+        b = b.timestamp()
+    if isinstance(b, str):
+        b = timestamp_from_string(b)
+    return abs(a - b)

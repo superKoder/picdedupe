@@ -37,3 +37,18 @@ class TimeTests(unittest.TestCase):
             "2019-06-30 21:17:38 +0000",
             "2019-06-30 23:17:38 +0200",
         ))
+
+
+    def test_seconds_between_times(self):
+        a_string = "2022-12-23 22:30:35 -0700"
+        b_string = "2022-12-23 22:32:15 -0700"
+        a_timestamp = pdt.timestamp_from_string(a_string)
+        b_timestamp = pdt.timestamp_from_string(b_string)
+        a_datetime = pdt.datetime_from_string(a_string)
+        b_datetime = pdt.datetime_from_string(b_string)
+        self.assertEqual(pdt.seconds_between_times(a_timestamp, a_timestamp), 0)
+        self.assertEqual(pdt.seconds_between_times(b_timestamp, b_timestamp), 0)
+        self.assertEqual(pdt.seconds_between_times(a_timestamp, b_timestamp), 100)
+        self.assertEqual(pdt.seconds_between_times(b_timestamp, a_timestamp), 100)
+        self.assertEqual(pdt.seconds_between_times(a_datetime, b_datetime), 100)
+        self.assertEqual(pdt.seconds_between_times(a_string, b_string), 100)
