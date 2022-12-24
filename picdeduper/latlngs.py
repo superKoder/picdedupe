@@ -52,12 +52,12 @@ class LatLng:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LatLng):
             return False
-        if not math.isclose(self.latitude, other.latitude):
-            False
+        if not math.isclose(self.latitude, other.latitude,):
+            return False
         if not math.isclose(self.longitude, other.longitude):
-            False
+            return False
         if not math.isclose(self.altitude, other.altitude):
-            False
+            return False
         return True
 
     def __ne__(self, other: object) -> bool:
@@ -65,6 +65,9 @@ class LatLng:
 
     def __str__(self) -> str:
         return self.as_string()
+
+    def __repr__(self) -> str:
+        return f"LatLng({self.latitude}, {self.longitude}, {self.altitude})"
 
 
 def parse_latlng(string: str) -> LatLng:
@@ -75,3 +78,12 @@ def parse_latlng(string: str) -> LatLng:
             latitude=float(matches.group(1)),
             longitude=float(matches.group(2)),
         )
+
+
+# Test data
+SAN_JOSE = LatLng(37.335480, -121.893028)
+SAN_FRANCISCO = LatLng(37.773972, -122.431297)
+NEW_YORK = LatLng(40.776676, -73.971321)
+LONDON = LatLng(51.509865, -0.118092)
+PARIS = LatLng(48.864716, 2.349014)
+BRUSSELS = LatLng(50.85045, 4.34878)
