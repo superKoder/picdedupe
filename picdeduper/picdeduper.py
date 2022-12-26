@@ -3,6 +3,7 @@ from picdeduper import fingerprinting as pdf
 from picdeduper import fixits as fixits
 from picdeduper import evaluation as pdeval
 from picdeduper import platform as pds
+from picdeduper import images
 
 
 class PicDeduper:
@@ -28,7 +29,7 @@ class PicDeduper:
 
         print(f"Indexing from {start_dir}...")
 
-        all_image_paths = self.platform.every_image_files_path(start_dir)
+        all_image_paths = images.every_image_path(self.platform, start_dir)
         for image_path in all_image_paths:
             if skip_untouched and self.is_processed_file(image_path, index_store):
                 print(f"Skipping untouched: {image_path}")
@@ -77,7 +78,6 @@ class PicDeduper:
 
                 if result.has_core_filename_dupes():
                     print(f"? NAME ? {image_path} shares the name of {result.paths_with_same_core_filename()}")
-                    print(f"? SAME ? {image_path} is an image dupe of {result.paths_with_same_image_properties()}")
                     # TODO: IF "better version" of same filename minus ext:
                     # TODO:   Add(replace) file in same path
                     # TODO:   Rename worse version as filename.heic.jpg

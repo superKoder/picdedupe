@@ -7,9 +7,10 @@ import subprocess
 from picdeduper import time as pdt
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Callable
 
 Filename = str
+FilenameFilter = Callable[[Filename], bool]
 Path = str
 PathList = List[str]
 PathSet = Set[str]
@@ -173,33 +174,8 @@ class Platform(ABC):
     def second_file_hash(self, path: Path) -> str:
         return self.file_sha512_hash(path)
 
-    def is_picture_file(self, filename: Filename) -> bool:
-        ext = filename_ext(filename).upper()
-        if ext == ".JPG":
-            return True
-        if ext == ".HEIC":
-            return True
-        if ext == ".JPEG":
-            return True
-        return False
-
-    def is_video_file(self, filename: Filename) -> bool:
-        ext = filename_ext(filename).upper()
-        if ext == ".MOV":
-            return True
-        if ext == ".MP4":
-            return True
-        if ext == ".HEVC":
-            return True
-        return False
-
-    def is_image_file(self, filename: Filename) -> bool:
-        if filename.startswith("."):
-            return False
-        return self.is_picture_file(filename) or self.is_video_file(filename)
-
     @abstractmethod
-    def every_image_files_path(self, dir_path: Path) -> PathList:
+    def every_file_path(self, dir_path: Path, filter: FilenameFilter = None) -> PathList:
         pass
 
 
@@ -232,20 +208,25 @@ class MacOSPlatform(Platform):
         mtime = timestamp
         os.utime(path, times=(atime, mtime))
 
-    def _every_image_files_path(self, io_path_list: PathList, dir_path: Path):
-        """Recursive part of every_image_files_path()"""
+    def _every_file_path(self, io_path_list: PathList, dir_path: Path, filter: FilenameFilter):
+        """Recursive part of every_file_path()"""
         for root, subdirs, filenames in os.walk(dir_path):
-            for filename in filenames:
+            for filename in sorted(filenames):
                 path = root + "/" + filename
-                if not self.is_image_file(filename):
+                if not filter(filename):
                     print(f"Skipping non-image: {path}")
                     continue
                 io_path_list.append(path)
 
-    def every_image_files_path(self, dir_path: Path) -> PathList:
-        """Returns a list of full paths of every .jpg, .heic, etc... file."""
+    def every_file_path(self, dir_path: Path, filter: FilenameFilter = None) -> PathList:
+        """
+        Returns a list of full paths of every file that passess `filter`.
+        The files are sorted within a subdir.
+        """
+        if not filter:
+            filter = (lambda filename: True)
         path_list = list()
-        self._every_image_files_path(path_list, dir_path)
+        self._every_file_path(path_list, dir_path, filter)
         return path_list
 
 
@@ -308,10 +289,10 @@ class FakePlatform(Platform):
     def set_mtime(self, path: Path, timestamp: pdt.Timestamp) -> None:
         self.mtimes[path] = timestamp
 
-    def configure_every_image_files_path(self, dir_path: Path, paths: PathList):
+    def configure_every_file_path(self, dir_path: Path, paths: PathList):
         self.image_files[dir_path] = paths
 
-    def every_image_files_path(self, dir_path: Path) -> PathList:
+    def every_file_path(self, dir_path: Path, filter: FilenameFilter = None) -> PathList:
         if not dir_path in self.image_files:
             raise f"Not configured: Image files in: {dir_path}"
         return self.image_files[dir_path]
