@@ -1,48 +1,39 @@
+**WARNING** This is very, very early work. It is probably **not useful** to you at this point.
+
 # picdedupe
 
-This is very, very early work. It is probably **not useful** to you at this point.
+A command line tool (as well as a re-usable library) to aid in dealing with a large number of incoming pictures (e.g. from a camera or phone), before adding them to your collection.
 
-Eventually, this will become a macOS-only(!) Python script with two ways to use it:
+Imagine you have one or more nicely kept collections of pictures (e.g. your family pics). Now imagine you want to find an SD card, or you want to back up your iPhone. You would want to add some of these pictures to your collection. But you probably don't want to add all pictures.
 
+picdedupe can help with these common problems:
 
-## Usage 1: Fingerprinting / Indexing
+- Do I already have this exact file?
+- Do I even want to consider (accidental) screenshots?
+- Do I have a better/worse version of this file? (e.g. RAW or .heic versus .jpg)
+- Do I have a very similar picture? (e.g. same event, same place, same angle)
+- ...
 
-In this first usage, it will "fingerprint" a large number of pictures or movies.  
-It does this by a combination of a fast file hash (e.g. MD5 or SHA1) and Spotlight
-metadata. It writes the result in a single images.json file.  
-  
-Consequetive runs over the same files should finish a lot quicker. As it uses
-an existing images.json to detect changes. So it can skip work on unchanged
-files.
+In addition, picdedupe is aware of common propoerties:
 
-If, however, you want to re-fingerprint everything, you can simply remove the
-picdedupe.json file.
+- Series that belong together (e.g. taken on the same day, at the same location)
+- Files that represent 1 picture (e.g. RAW + .jpg, or .heic + .jpg)
+- Files that represent a Live Photo (e.g. .mov + .jpg)
+- ...
 
+YOU choose! (indiviually, or set defaults)
 
-## Usage 2: Detecting Dupes & Similar Images
+- Should dupes be removed?
+- Should .heic pictures replace .jpg versions?
+- Should .mov files under 3 sec be removed if there is no .jpg to attach it to?
+- Should RAW files be kept no matter what?
+- ...
 
-Using the same picdeduper.json file (created by usage 1), it can check another 
-folder structure of candidate images (e.g. new pics from your camera). 
+And much, much more!
 
-If it finds a perfect dupe, it will drop the new file (by moving it into a
-subfolder called ./_DUPES)
-
-If it finds a very similar image, based on things like the resolution, the
-GPS location, the camera, etc... it can act on that in several ways:
-
-  - If it is a better version of the same image (e.g. an HEIC for a JPEG, or a   
-    higher resolution version), it can replace the original (by renaming it,  
-    e.g. filename.heic.jpg or filename_small.jpg, and moving it into a subfolder  
-    called ./_SIMILAR as filename.heic.jpg)
-
-  - If it is a worse version, it will leave the original and treat this one as   
-    the lesser version in ./_SIMILAR
-
-  - If it detects a movie of a picture (e.g. Apple's Live Photo), it will
-    move the two together and name them appropriately (e.g. filename.jpg.mov).
-
-  - If it detects a RAW of a .jpg, it will name it appropriately and put them  
-    together as well.
+- You can expand picdedupe with your own `Fixits`.
+- Everything is modular; you could write another frontend.
+- You can misuse it on purpose (e.g. as an indexer, or to find dupes within your collection)
 
 
 **WARNING:** THIS IS NOT READY TO BE USED BY ANYONE.
