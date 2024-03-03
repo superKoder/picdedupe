@@ -98,7 +98,7 @@ class FixItAction(ABC):
         pass
 
 
-class BasePlatformFixItaction(FixItAction):
+class BasePlatformFixItAction(FixItAction):
     """Abstract base class for FixItActions that rely on Platform"""
 
     def __init__(self, platform: pds.Platform) -> None:
@@ -133,7 +133,7 @@ class DoNothingAction(FixItAction):
         pass
 
 
-class FixItMoveFileAction(BasePlatformFixItaction):
+class FixItMoveFileAction(BasePlatformFixItAction):
     """Moves a file to another location"""
 
     def __init__(self, platform: pds.Platform, path: pds.Path, to_dir: pds.Path) -> None:
@@ -170,7 +170,7 @@ class FixItSoftDeleteFileAction(FixItMoveFileAction):
         self.description.add(FixItDescriptionTextElement(")"))
 
 
-class ChangeFileMTimeAction(BasePlatformFixItaction):
+class ChangeFileMTimeAction(BasePlatformFixItAction):
     """Changes the mtime of a file"""
 
     def __init__(self, platform: pds.Platform, path: pds.Path, ts: pdt.Timestamp) -> None:
@@ -319,7 +319,7 @@ class CommandLineFixItProcessor(FixItProcessor):
             return "   ⏎ "
         if len(keyb_key) == 1:
             return f" {pds.Style.highlight(keyb_key.upper())} ⏎ "
-        return str + " ⏎"
+        return keyb_key + " ⏎"
 
     def _pretty_description_element(self, element: FixItDescriptionElement) -> str:
         txt = element.get_text()
