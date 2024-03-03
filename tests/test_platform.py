@@ -1,4 +1,5 @@
 import unittest
+import random
 
 from picdeduper import platform as pds
 
@@ -72,3 +73,24 @@ class PlatformTests(unittest.TestCase):
 
         self.assertTrue(cmd_line in platform.called_cmd_lines)
         self.assertEqual(output, "1234DeadBead9876")
+
+    def test_sort_filenames(self):
+        input = [
+            'IMG_0001.JPG',
+            'IMG_0002.JPG',
+            'IMG_0002 1.JPG',
+            'IMG_0002 2.JPG',
+            'IMG_0003.JPG',
+        ]
+        expected = [
+            'IMG_0001.JPG',
+            'IMG_0002.JPG',  # before the spaces (= copies)
+            'IMG_0002 1.JPG',
+            'IMG_0002 2.JPG',
+            'IMG_0003.JPG',
+        ]
+
+        random.shuffle(input)
+        output = pds.sorted_filenames(input)
+
+        self.assertEqual(output, expected)

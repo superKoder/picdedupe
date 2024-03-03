@@ -67,6 +67,13 @@ def file_link_for_path(path: Path) -> URI:
     return pathlib.Path(os.path.abspath(path)).as_uri()
 
 
+def sorted_filenames(filenames: List[Filename]) -> List[Filename]:
+    """
+    Normal alphabetical sorting. But making sure 'IMG_0001.JPG' comes before 'IMG_0001 1.JPG'.
+    """
+    return sorted(filenames, key=lambda x: x.replace(' ', '~'))
+
+
 class Style:
     RESET = "\033[0m"
 
@@ -211,7 +218,7 @@ class MacOSPlatform(Platform):
     def _every_file_path(self, io_path_list: PathList, dir_path: Path, filter: FilenameFilter):
         """Recursive part of every_file_path()"""
         for root, subdirs, filenames in os.walk(dir_path):
-            for filename in sorted(filenames):
+            for filename in sorted_filenames(filenames):
                 path = root + "/" + filename
                 if not filter(filename):
                     print(f"Skipping non-image: {path}")
