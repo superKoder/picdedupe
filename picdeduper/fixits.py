@@ -91,7 +91,10 @@ class FixItAction(ABC):
 
     @abstractmethod
     def do_it(self) -> bool:
-        pass
+        """
+        Return True if something was actually done (not on NOOPs).
+        """
+        return False
 
     @abstractmethod
     def leave_txt_history(self, txt_content: str) -> None:
@@ -127,7 +130,7 @@ class DoNothingAction(FixItAction):
         self.description.add(FixItDescriptionBoldTextElement("nothing"))
 
     def do_it(self) -> bool:
-        pass
+        return False
 
     def leave_txt_history(self, txt_content: str) -> None:
         pass
@@ -154,6 +157,7 @@ class FixItMoveFileAction(BasePlatformFixItAction):
         self.set_txt_history_path(to_path + ".txt")
         cmd = ["mv", self.from_path, self.to_dir]   # [!DFSO!]
         self.platform.stdout_of(cmd)
+        return True
 
 
 class FixItSoftDeleteFileAction(FixItMoveFileAction):
@@ -189,6 +193,7 @@ class ChangeFileMTimeAction(BasePlatformFixItAction):
         assert self.platform.path_exists(self.path)
         self.platform.set_mtime(self.path, self.timestamp)
         self.set_txt_history_path(self.path + ".txt")
+        return True
 
 
 class FixIt(ABC):
@@ -201,9 +206,6 @@ class FixIt(ABC):
 
     def get_proposed_actions(self) -> List[FixItAction]:
         return self.actions
-
-    # def ignore(self) -> None:
-    #     pass # abstract
 
 
 class ExactDupeFixIt(FixIt):
@@ -269,7 +271,7 @@ class FixItProcessor(ABC):
     @abstractmethod
     def process(self, fixit: FixIt) -> bool:
         """Return True only if successfully processed"""
-        pass
+        return False
 
 
 class CommandLineFixItProcessor(FixItProcessor):
@@ -353,14 +355,14 @@ class CommandLineFixItProcessor(FixItProcessor):
             pos += 1
             keyb_key = self._keyb_key_for_action(action, pos)
             print(f" {self._pretty_keyb_key(keyb_key)} : {self._pretty_description(action.describe())}")
-            if type(action) == default_action_type:
-                print("Auto-selected!")
-                chosen_action = action
+            # if type(action) == default_action_type:
+            #     print("Auto-selected!")
+            #     chosen_action = action
 
         while not chosen_action:
             chosen_action = self._action_for_keyb_key(input("Your choice: ").upper())
         print(f"You picked: {self._pretty_description(chosen_action.describe())}")
-        chosen_action.do_it()
+        did_it = chosen_action.do_it()
         chosen_action.leave_txt_history(fixit.describe().as_simple_text())
         print("-- -- -- -- -- -- -- -- -- -- -- --")
-        return True  # TODO
+        return did_it

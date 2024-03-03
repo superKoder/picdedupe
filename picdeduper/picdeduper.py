@@ -45,15 +45,9 @@ class PicDeduper:
                 # TODO: Make evaluation() aware of weak data
                 # TODO: Detect .mov for .jpg (on creator + date + filename?)
 
-                if result.has_incorrect_file_time():
-                    file_ts, image_ts = result.incorrect_time_tuple
-                    fixit = fixits.WrongFileTimeFixIt(self.platform, image_path, file_ts, image_ts)
-                    self.fixit_processor.process(fixit)
-                    # intentional fallthrough
-
                 if result.has_hash_dupes():
                     same_hash_paths = result.paths_with_same_hash()
-                    same_hash_paths.add(image_path)
+                    # same_hash_paths.add(image_path)
                     same_hash_image_properties_dict = index_store.image_properties_dict_for_paths(same_hash_paths)
                     assert self.fingerprinter.double_check_dupes(same_hash_image_properties_dict)
                     print(f"! DUPE ! {image_path} is a file dupe of {result.paths_with_same_hash()}")
@@ -63,6 +57,12 @@ class PicDeduper:
                     # TODO:   Add a ./DUPES/{filename}.txt with the original
                     if self.fixit_processor.process(fixit):
                         continue
+
+                if result.has_incorrect_file_time():
+                    file_ts, image_ts = result.incorrect_time_tuple
+                    fixit = fixits.WrongFileTimeFixIt(self.platform, image_path, file_ts, image_ts)
+                    self.fixit_processor.process(fixit)
+                    # intentional fallthrough
 
                 if result.has_image_property_dupes():
                     print(f"? SAME ? {image_path} is an image dupe of {result.paths_with_same_image_properties()}")
