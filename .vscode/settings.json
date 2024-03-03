@@ -4,5 +4,15 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "python.formatting.autopep8Args": ["--max-line-length", "120", "--experimental"],
+    "python.formatting.provider": "autopep8",
+    "python.formatting.autopep8Args": [
+        "--max-line-length",
+        "120",
+        "--experimental"
+    ],
+    "autopep8.args": [
+        "--max-line-length",
+        "120",
+        "--experimental"
+    ]
 }
