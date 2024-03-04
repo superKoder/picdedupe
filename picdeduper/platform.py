@@ -3,6 +3,7 @@ import pathlib
 import platform
 import re
 import subprocess
+import hashlib
 
 from picdeduper import time as pdt
 
@@ -198,6 +199,28 @@ class Platform(ABC):
 
     def _file_shasum_sha512256_hash(self, path: Path) -> str:
         return self._shasum_digest("512256", path)
+
+    def _file_hashlib_hash(self, hashlib_func, path: Path) -> str:
+        hash = hashlib_func()
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash.update(chunk)
+        return hash.hexdigest()
+
+    def _file_hashlib_md5_hash(self, path: Path) -> str:
+        return self._file_hashlib_hash(hashlib.md5, path)
+
+    def _file_hashlib_sha256_hash(self, path: Path) -> str:
+        return self._file_hashlib_hash(hashlib.sha256, path)
+
+    def _file_hashlib_sha512_hash(self, path: Path) -> str:
+        return self._file_hashlib_hash(hashlib.sha512, path)
+
+    def _file_hashlib_sha3_256_hash(self, path: Path) -> str:
+        return self._file_hashlib_hash(hashlib.sha3_256, path)
+
+    def _file_hashlib_sha3_512_hash(self, path: Path) -> str:
+        return self._file_hashlib_hash(hashlib.sha3_512, path)
 
     def quick_file_hash(self, path: Path) -> str:
         # NOTE: SHA256 is actually faster than MD4 on M1+ Macs!  :o

@@ -19,11 +19,18 @@ HASHES = {
     "openssl/sha512" : platform._file_openssl_sha512_hash,
 
     "md5 (cli)" : platform._file_md5_standalone_hash,
-
+    
     "shasum/sha1" : platform._file_shasum_sha1_hash,
     "shasum/sha256" : platform._file_shasum_sha256_hash,
     "shasum/sha512" : platform._file_shasum_sha512_hash,
     "shasum/sha512256" : platform._file_shasum_sha512256_hash,
+
+    "hashlib/md5" : platform._file_hashlib_md5_hash,
+    "hashlib/sha256" : platform._file_hashlib_sha256_hash,
+    "hashlib/sha512" : platform._file_hashlib_sha512_hash,
+
+    "hashlib/sha3_256" : platform._file_hashlib_sha3_256_hash,
+    "hashlib/sha3_512" : platform._file_hashlib_sha3_512_hash,
 }
 
 def preheat(path: pds.Path) -> None:
@@ -32,8 +39,9 @@ def preheat(path: pds.Path) -> None:
 
 def measure(func, path: pds.Path) -> float:
     start = time.perf_counter_ns()
-    func(path)
+    output = func(path)
     end = time.perf_counter_ns()
+    print(f": {output}")
     return (end - start)
 
 def main():
@@ -64,7 +72,7 @@ def main():
     preheat(path)
     for i in range(ITERATIONS):
         for key in HASHES:
-            print(f"Measurement {i+1} of '{key}'")
+            print(f"Measurement {i+1} of '{key}'", end="")
             nsec = measure(HASHES[key], path)
             measurements[key].append(nsec)
 
