@@ -133,3 +133,6 @@ picdedupe*.json
 del/
 del_*
 was_*
+_dupes/*
+my*.json
+etc/test_file.bin
