@@ -54,22 +54,22 @@ class PlatformTests(unittest.TestCase):
         self.assertEqual(pds.path_core_filename("/path/to/file copy 1.ext"), "file")
         self.assertEqual(pds.path_core_filename("/path/to/file copy 22.ext"), "file")
 
-    def test_file_md5_hash(self):
-        cmd_line = "md5 -q /test/testfile.tst"
-        platform = pds.FakePlatform()
-        platform.configure_raw_stdout_of(cmd_line, b"1234DeadBead9876\n")
-
-        output = platform.file_md5_hash("/test/testfile.tst")
-
-        self.assertTrue(cmd_line in platform.called_cmd_lines)
-        self.assertEqual(output, "1234DeadBead9876")
-
-    def test_file_sha256_hash(self):
+    def test_quick_file_hash(self):
         cmd_line = "openssl sha256 -r /test/testfile.tst"
         platform = pds.FakePlatform()
         platform.configure_raw_stdout_of(cmd_line, b"1234DeadBead9876 */test/testfile.tst\n")
 
-        output = platform.file_sha256_hash("/test/testfile.tst")
+        output = platform.quick_file_hash("/test/testfile.tst")
+
+        self.assertTrue(cmd_line in platform.called_cmd_lines)
+        self.assertEqual(output, "1234DeadBead9876")
+
+    def test_second_opinion_file_hash(self):
+        cmd_line = "openssl md4 -r /test/testfile.tst"
+        platform = pds.FakePlatform()
+        platform.configure_raw_stdout_of(cmd_line, b"1234DeadBead9876 */test/testfile.tst\n")
+
+        output = platform.second_opinion_file_hash("/test/testfile.tst")
 
         self.assertTrue(cmd_line in platform.called_cmd_lines)
         self.assertEqual(output, "1234DeadBead9876")

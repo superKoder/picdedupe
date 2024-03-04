@@ -205,7 +205,7 @@ class Platform(ABC):
 
     def second_opinion_file_hash(self, path: Path) -> str:
         # NOTE: MD4 may not be secure but good enough as second opinion (and fast!)
-        return self._file_shasum_sha256_hash(path)
+        return self._file_openssl_md4_hash(path)
 
     @abstractmethod
     def every_file_path(self, dir_path: Path, filter: FilenameFilter = None) -> PathList:

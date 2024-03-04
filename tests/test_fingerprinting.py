@@ -71,7 +71,7 @@ class FingerprintTests(unittest.TestCase):
             kMDItemPixelWidth                      = 4032
             """)
         platform.configure_raw_stdout_of(
-            "openssl md4 -r /test/testfile.tst",
+            "openssl sha256 -r /test/testfile.tst",
             b"01234DeadBead9876")
 
         fingerprinter = pdf.Fingerprinter(platform)
