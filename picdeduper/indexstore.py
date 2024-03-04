@@ -4,6 +4,7 @@ from typing import Dict, List
 from picdeduper import common as pdc
 from picdeduper import platform as pds
 
+# TODO: This file desperately needs unit tests!!
 
 class IndexStore:
 
@@ -79,6 +80,9 @@ class IndexStore:
         index_store.by_path = index_store_dict[pdc.KEY_BY_PATH]
         index_store.by_hash = index_store_dict[pdc.KEY_BY_HASH]
         index_store.by_core_filename = index_store_dict[pdc.KEY_BY_FILENAME]
+        image_date_stats = index_store_dict[pdc.KEY_IMAGE_DATE_STATS]
+        index_store.newest_image_date = image_date_stats[pdc.KEY_NEWEST]
+        index_store.oldest_image_date = image_date_stats[pdc.KEY_OLDEST]
         for key in index_store.by_hash:
             index_store.by_hash[key] = set(index_store.by_hash[key])
         for key in index_store.by_core_filename:

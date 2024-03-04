@@ -8,11 +8,29 @@ from picdeduper import fixits  # TODO
 
 import argparse
 import sys
+import signal
+
+platform = pds.MacOSPlatform()
+fingerprinter = pdf.Fingerprinter(platform)
+fixit_processor = fixits.CommandLineFixItProcessor()
+fixit_processor.configure_fixit_default_actions(fixits.ExactDupeFixIt, fixits.FixItSoftDeleteFileAction)
+picdeduper = pd.PicDeduper(platform, fingerprinter, fixit_processor)
+
+
+def on_ctrl_c(signum, frame):
+    print("")
+    print("")
+    print("Quitting because of CTRL+C...")
+    print("")
+    print("")
+    picdeduper.should_quit = True
 
 
 def main():
 
     DEFAULT_JSON_FILENAME = "picdedupe.json"
+
+    signal.signal(signal.SIGINT, on_ctrl_c)
 
     parser = argparse.ArgumentParser(description="""
         Tool to figure out if new images are already in an established collection.
@@ -60,12 +78,6 @@ def main():
     collection_start_dir = args.collection_start_dir
     json_path = args.json_file_path
 
-    platform = pds.MacOSPlatform()
-    fingerprinter = pdf.Fingerprinter(platform)
-    fixit_processor = fixits.CommandLineFixItProcessor()
-    fixit_processor.configure_fixit_default_actions(fixits.ExactDupeFixIt, fixits.FixItSoftDeleteFileAction)
-    picdeduper = pd.PicDeduper(platform, fingerprinter, fixit_processor)
-
     if not collection_start_dir and json_path and not platform.path_exists(json_path):
         print(f"-error: Cannot find {json_path}")
         sys.exit(1)
@@ -74,7 +86,7 @@ def main():
     index_store = IndexStore.load(json_path, platform)
     print("Done.")
 
-    if collection_start_dir:
+    if collection_start_dir and not picdeduper.should_quit:
         print(f"Indexing collection at {collection_start_dir}...")
         picdeduper.index_established_collection_dir(
             index_store, collection_start_dir)
@@ -84,7 +96,7 @@ def main():
         index_store.save(json_path)
         print("Done.")
 
-    if candidate_start_dir:
+    if candidate_start_dir and not picdeduper.should_quit:
         print(f"Checking candidates at {candidate_start_dir}...")
         picdeduper.evaluate_candidate_dir(index_store, candidate_start_dir)
         print("Done.")

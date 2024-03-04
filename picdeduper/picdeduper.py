@@ -12,6 +12,7 @@ class PicDeduper:
         self.platform = platform
         self.fingerprinter = fingerprinter
         self.fixit_processor = fixit_processor
+        self.should_quit = False
 
     def is_processed_file(self, image_path: pds.Path, index_store: IndexStore) -> bool:
         """
@@ -31,6 +32,11 @@ class PicDeduper:
 
         all_image_paths = images.every_image_path(self.platform, start_dir)
         for image_path in all_image_paths:
+
+            # Stop iterating upon CTRL+C
+            if self.should_quit: 
+                break
+
             if skip_untouched and self.is_processed_file(image_path, index_store):
                 print(f"Skipping untouched: {image_path}")
                 continue
