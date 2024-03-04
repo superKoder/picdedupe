@@ -6,7 +6,7 @@
     "configurations": [
         {
             "name": "Python: Current File",
-            "type": "python",
+            "type": "debugpy",
             "program": "${file}",
             "request": "launch",
             "console": "integratedTerminal",
@@ -15,7 +15,7 @@
         },
         {
             "name": "picdedupe (no args)",
-            "type": "python",
+            "type": "debugpy",
             "program": "picdedupe.py",
             "request": "launch",
             "console": "integratedTerminal",
@@ -34,7 +34,7 @@
         },
         {
             "name": "picdedupe (usecase 1)",
-            "type": "python",
+            "type": "debugpy",
             "program": "picdedupe.py",
             "request": "launch",
             "console": "integratedTerminal",
@@ -45,7 +45,7 @@
         },
         {
             "name": "picdedupe (usecase 2)",
-            "type": "python",
+            "type": "debugpy",
             "program": "picdedupe.py",
             "request": "launch",
             "console": "integratedTerminal",
@@ -56,7 +56,7 @@
         },
         {
             "name": "picdedupe (usecase 3)",
-            "type": "python",
+            "type": "debugpy",
             "program": "picdedupe.py",
             "request": "launch",
             "console": "integratedTerminal",
@@ -65,6 +65,16 @@
                 "--incoming_dir", "~/candidates",
                 "--collection_dir", "~/collection",
             ]
-        }
-    ]
+        },
+        {
+            "name": "File hashing speedtest",
+            "type":  "debugpy",
+            "program": "etc/speedtest_hashing.py",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "args": [
+                "etc/test_file.bin"
+            ]
+        },
+    ],
 }

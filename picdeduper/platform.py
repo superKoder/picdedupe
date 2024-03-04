@@ -160,26 +160,52 @@ class Platform(ABC):
             return None
         return parts[0]
 
-    def file_sha256_hash(self, path: Path) -> str:
+    def _shasum_digest(self, algorithm: str, path: Path) -> str:
+        parts = self.stdout_of(["shasum", "-a", algorithm, path]).split(" ")
+        if len(parts) == 0:
+            return None
+        return parts[0]
+
+    def _file_openssl_sha1_hash(self, path: Path) -> str:
+        return self._openssl_digest("sha1", path)
+
+    def _file_openssl_sha256_hash(self, path: Path) -> str:
         return self._openssl_digest("sha256", path)
 
-    def file_sha512_hash(self, path: Path) -> str:
+    def _file_openssl_sha512_hash(self, path: Path) -> str:
         return self._openssl_digest("sha512", path)
 
-    def _file_md4_hash(self, path: Path) -> str:
+    def _file_openssl_md4_hash(self, path: Path) -> str:
         """Note: MD4 is known to be insecure, but it fast!"""
         return self._openssl_digest("md4", path)
 
-    def file_md5_hash(self, path: Path) -> str:
+    def _file_openssl_md5_hash(self, path: Path) -> str:
+        """Note: MD4 is known to be insecure, but it fast!"""
+        return self._openssl_digest("md5", path)
+
+    def _file_md5_standalone_hash(self, path: Path) -> str:
         # WARNING: This is macOS specific! On Linux, it is md5sum.
         return self.stdout_of(["md5", "-q", path])
 
-    def quick_file_hash(self, path: Path) -> str:
-        # NOTE: MD4 is fast, but SHA256 is actually faster on M1 Macs
-        return self._file_md4_hash(path)
+    def _file_shasum_sha1_hash(self, path: Path) -> str:
+        return self._shasum_digest("1", path)
 
-    def second_file_hash(self, path: Path) -> str:
-        return self.file_sha512_hash(path)
+    def _file_shasum_sha256_hash(self, path: Path) -> str:
+        return self._shasum_digest("256", path)
+
+    def _file_shasum_sha512_hash(self, path: Path) -> str:
+        return self._shasum_digest("512", path)
+
+    def _file_shasum_sha512256_hash(self, path: Path) -> str:
+        return self._shasum_digest("512256", path)
+
+    def quick_file_hash(self, path: Path) -> str:
+        # NOTE: SHA256 is actually faster than MD4 on M1+ Macs!  :o
+        return self._file_openssl_sha256_hash(path)
+
+    def second_opinion_file_hash(self, path: Path) -> str:
+        # NOTE: MD4 may not be secure but good enough as second opinion (and fast!)
+        return self._file_shasum_sha256_hash(path)
 
     @abstractmethod
     def every_file_path(self, dir_path: Path, filter: FilenameFilter = None) -> PathList:

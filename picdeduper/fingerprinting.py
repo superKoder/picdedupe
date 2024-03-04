@@ -188,7 +188,7 @@ class Fingerprinter:
             second_hash = (
                 images_properties[pdc.KEY_FILE_SECOND_HASH]
                 if pdc.KEY_FILE_SECOND_HASH in images_properties
-                else self.platform.second_file_hash(path)
+                else self.platform.second_opinion_file_hash(path)
             )
             images_properties[pdc.KEY_FILE_SECOND_HASH] = second_hash
             if not second_hash_check:

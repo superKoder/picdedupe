@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from picdeduper import picdeduper as pd
 from picdeduper.indexstore import IndexStore
