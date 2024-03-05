@@ -45,6 +45,26 @@ class FileSeriesTests(unittest.TestCase):
 
         self.assertEqual(len(splitter.all_file_series), 2)
 
+    def test_different_file_prefix(self):
+
+        splitter = fileseries.PictureFileSeriesSplitter()
+
+        self.assertEqual(len(splitter.all_file_series), 0)
+
+        properties = {
+            pdc.KEY_IMAGE_CREATOR: "creator",
+            pdc.KEY_IMAGE_LOC: "<+37.4,-120.3>",
+            pdc.KEY_IMAGE_DATE: "2022-12-23 20:13:32 -0700"
+        }
+
+        splitter.add_path("/path/one/IMG_1001.JPG", properties)
+        splitter.add_path("/path/one/IMG_1002.JPG", properties)
+
+        splitter.add_path("/path/one/PIC_1003.JPG", properties)
+        splitter.add_path("/path/one/PIC_1004.JPG", properties)
+
+        self.assertEqual(len(splitter.all_file_series), 2)
+
     def test_different_location(self):
 
         splitter = fileseries.PictureFileSeriesSplitter()

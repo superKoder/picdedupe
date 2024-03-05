@@ -18,12 +18,14 @@ class PictureFileSeries(ABC):
     """
 
     def __init__(self,
+                 file_prefix: str,
                  file_num: int,
                  latlng: pdl.LatLng,
                  timestamp: pdt.Timestamp,
                  creator: str) -> None:
 
         super().__init__()
+        self.file_prefix = file_prefix
         self.file_num = file_num
         self.latlng = latlng
         self.timestamp = timestamp
@@ -45,16 +47,20 @@ class PictureFileSeriesSplitter:
                  max_timestamp_diff: pdt.Timestamp = 8*3600) -> None:
 
         self.all_file_series: List[PictureFileSeries] = list()
+        
         self.curr_file_series: PictureFileSeries = None
         self.curr_file_group: filegroups.PictureFileGroup = None
+        self.curr_file_prefix: str = None
         self.curr_file_num: int = None
 
         self.max_file_num_gap = max_file_num_gap
         self.max_distance_degrees = max_distance_degrees
         self.max_timestamp_diff = max_timestamp_diff
 
-    def _is_file_num_gap(self, file_num: int) -> bool:
-        if not self.curr_file_series:
+    def _is_file_num_gap(self, file_prefix: str, file_num: int) -> bool:
+        if (not self.curr_file_prefix) or (not self.curr_file_series):
+            return True
+        if (self.curr_file_prefix != file_prefix):
             return True
         if (file_num <= self.curr_file_num):
             return True
@@ -84,20 +90,22 @@ class PictureFileSeriesSplitter:
         return (self.curr_file_series.creator != creator)
 
     def _start_new_series(self,
+                          file_prefix: str,
                           file_num: int,
                           latlng: pdl.LatLng,
                           timestamp: pdt.Timestamp,
                           creator: str) -> None:
-        self.curr_file_series = PictureFileSeries(file_num, latlng, timestamp, creator)
+        self.curr_file_series = PictureFileSeries(file_prefix, file_num, latlng, timestamp, creator)
         self.all_file_series.append(self.curr_file_series)
 
     def _needs_new_series(self,
+                          file_prefix: str,
                           file_num: int,
                           latlng: pdl.LatLng,
                           timestamp: pdt.Timestamp,
                           creator: str) -> bool:
-
-        if self._is_file_num_gap(file_num):
+        
+        if self._is_file_num_gap(file_prefix, file_num):
             return True
 
         if self._is_too_far_away(latlng):
@@ -120,8 +128,8 @@ class PictureFileSeriesSplitter:
         latlng: pdl.LatLng = pdl.parse_latlng(properties[pdc.KEY_IMAGE_LOC])
         timestamp: pdt.Timestamp = pdt.timestamp_from_string(properties[pdc.KEY_IMAGE_DATE])
 
-        if self._needs_new_series(file_num, latlng, timestamp, creator):
-            self._start_new_series(file_num, latlng, timestamp, creator)
+        if self._needs_new_series(file_prefix, file_num, latlng, timestamp, creator):
+            self._start_new_series(file_prefix, file_num, latlng, timestamp, creator)
 
         assert self.curr_file_series
 
@@ -134,4 +142,5 @@ class PictureFileSeriesSplitter:
         self.curr_file_group = filegroups.PictureFileGroup()
         self.curr_file_group.add_file_path(path)
         self.curr_file_series.add_file_group(self.curr_file_group)
+        self.curr_file_prefix = file_prefix
         self.curr_file_num = file_num
