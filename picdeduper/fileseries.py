@@ -4,16 +4,24 @@ from picdeduper import filegroups
 from picdeduper import latlngs as pdl
 from picdeduper import time as pdt
 from picdeduper import images
+from picdeduper import jsonable
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Dict
+
+KEY_JSON_GROUPS = "groups"
+KEY_JSON_FILE_PREFIX = "fileprefix"
+KEY_JSON_FILE_NUM = "filenum"
+KEY_JSON_LATLNG = "latlng"
+KEY_JSON_TIMESTAMP = "timestamp"
+KEY_JSON_CREATOR = "creator"
 
 
-class PictureFileSeries(ABC):
+class PictureFileSeries(jsonable.Jsonable):
     """
     A PictureFileSeries is a gap-less sequence of pictures taken at the 
     same time, at the same place, by the same creator.
-    
+
     In reality, it stores PictureFileGroups, rather than individual files.
     """
 
@@ -34,6 +42,16 @@ class PictureFileSeries(ABC):
 
     def add_file_group(self, file_group: filegroups.PictureFileGroup) -> None:
         self.file_groups.append(file_group)
+
+    def as_jsonable(self) -> Dict:
+        return {
+            KEY_JSON_FILE_PREFIX: jsonable.to(self.file_prefix),
+            KEY_JSON_FILE_NUM: jsonable.to(self.file_num),
+            KEY_JSON_LATLNG: jsonable.to(self.latlng),
+            KEY_JSON_TIMESTAMP: jsonable.to(self.timestamp),
+            KEY_JSON_CREATOR: jsonable.to(self.creator),
+            KEY_JSON_GROUPS: jsonable.to(self.file_groups),
+        }
 
 
 class PictureFileSeriesSplitter:

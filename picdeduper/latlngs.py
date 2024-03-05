@@ -2,13 +2,17 @@
 import math
 import re
 
+from typing import Dict
+
+from picdeduper import jsonable
+
 Degrees = float
 DistanceInKm = float
 
 RE_LATLNG = re.compile(r"<([\+\-]?\d+\.?\d*),([\+\-]?\d+\.?\d*)>")
 
 
-class LatLng:
+class LatLng(jsonable.Jsonable):
     """Represents at latitude-longitude, an optionally an altitude"""
 
     def __init__(self, latitude: Degrees, longitude: Degrees, altitude: Degrees = 0.) -> None:
@@ -69,9 +73,16 @@ class LatLng:
     def __repr__(self) -> str:
         return f"LatLng({self.latitude}, {self.longitude}, {self.altitude})"
 
+    def as_jsonable(self) -> Dict:
+        return {
+            "lat": jsonable.to(self.latitude),
+            "lng": jsonable.to(self.longitude),
+        }
+
 
 def parse_latlng(string: str) -> LatLng:
     """Parses a <lat,lng> string into a LatLng object"""
+    if not string: return None
     matches = RE_LATLNG.match(string)
     if matches:
         return LatLng(

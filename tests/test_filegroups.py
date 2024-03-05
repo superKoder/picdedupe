@@ -1,6 +1,7 @@
 import unittest
 
 from picdeduper import filegroups
+from picdeduper import jsonable
 
 
 class PictureFileGroupTests(unittest.TestCase):
@@ -59,3 +60,10 @@ class PictureFileGroupTests(unittest.TestCase):
         filegroup.add_file_path("/test/IMG_123.HEIC")
 
         self.assertFalse(filegroup.could_include_path("/test/IMG_666.HEIC"))
+
+    def test_jsonable_to(self):
+        filegroup = filegroups.PictureFileGroup()
+        filegroup.add_file_path("/test/IMG_123.MOV")
+        filegroup.add_file_path("/test/IMG_123.JPG")
+        filegroup.add_file_path("/test/IMG_123.RAW")
+        self.assertDictEqual(jsonable.to(filegroup), {'main': '/test/IMG_123.JPG', 'supporting': ['/test/IMG_123.MOV', '/test/IMG_123.RAW']})

@@ -1,9 +1,13 @@
 from picdeduper import platform as pds
+from picdeduper import jsonable
 
 from abc import ABC, abstractmethod
+from typing import Dict
 
+KEY_JSON_MAIN = "main"
+KEY_JSON_SUPPORTING = "supporting"
 
-class FileGroup(ABC):
+class FileGroup(jsonable.Jsonable):
     """A file group is one or more files that belong together. 
     For example, a .JPG and a .MOV that make up a "live photo" on iOS. Or a .JPG and its RAW."""
 
@@ -46,6 +50,12 @@ class FileGroup(ABC):
             return True
         return (pds.path_core_filename(self.main_file_path()) ==
                 pds.path_core_filename(path))
+    
+    def as_jsonable(self) -> Dict:
+        return {
+            KEY_JSON_MAIN: jsonable.to(self.main_path),
+            KEY_JSON_SUPPORTING: jsonable.to(sorted(self.supporting_file_paths)),
+        }
 
 
 class PictureFileGroup(FileGroup):

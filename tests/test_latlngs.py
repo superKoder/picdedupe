@@ -1,7 +1,7 @@
 import unittest
 
 from picdeduper import latlngs
-
+from picdeduper import jsonable
 
 class LatLngTests(unittest.TestCase):
     def test_init(self):
@@ -93,3 +93,7 @@ class LatLngTests(unittest.TestCase):
         self.assertAlmostEqual(paris.distance_in_km(nyc), 5844, places=0)
         self.assertAlmostEqual(nyc.distance_in_km(brussels), 5896, places=0)
         self.assertAlmostEqual(nyc.distance_in_km(paris), 5844, places=0)
+
+    def test_jsonable_to(self):
+        latlng = latlngs.LatLng(+98.765, -124.45)
+        self.assertDictEqual(jsonable.to(latlng), {"lat": +98.765, "lng": -124.45})

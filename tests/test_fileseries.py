@@ -3,9 +3,14 @@ import unittest
 from picdeduper import common as pdc
 from picdeduper import fileseries
 from picdeduper import latlngs
+from picdeduper import jsonable
 
 
 class FileSeriesTests(unittest.TestCase):
+
+    def __init__(self, methodName: str = "runTest") -> None:
+        super().__init__(methodName)
+        self.maxDiff = None
 
     def test_perfect_series(self):
 
@@ -157,3 +162,58 @@ class FileSeriesTests(unittest.TestCase):
         file_series_of_creator2 = splitter.all_file_series[1]
         self.assertEqual(len(file_series_of_creator1.file_groups), 4)
         self.assertEqual(len(file_series_of_creator2.file_groups), 1)
+
+    def test_jsonable_to(self):
+
+        splitter = fileseries.PictureFileSeriesSplitter()
+
+        creator_a = {
+            pdc.KEY_IMAGE_CREATOR: "creator",
+            pdc.KEY_IMAGE_LOC: latlngs.NEW_YORK.as_string(),
+            pdc.KEY_IMAGE_DATE: "2022-12-23 20:13:32 -0700"
+        }
+
+        creator_b = {
+            pdc.KEY_IMAGE_CREATOR: "other",  # !!!
+            pdc.KEY_IMAGE_LOC: latlngs.NEW_YORK.as_string(),
+            pdc.KEY_IMAGE_DATE: "2022-12-23 20:13:32 -0700"
+        }
+
+        splitter.add_path("/path/one/IMG_1001.JPG", creator_a)
+        splitter.add_path("/path/one/IMG_1002.JPG", creator_a)
+        splitter.add_path("/path/one/IMG_1003.JPG", creator_a)
+        splitter.add_path("/path/one/IMG_1003.MOV", creator_a)
+        splitter.add_path("/path/one/IMG_1004.JPG", creator_a)
+
+        splitter.add_path("/path/one/IMG_1005.JPG", creator_b)
+
+        series = splitter.all_file_series
+
+        self.assertListEqual(
+            jsonable.to(series), [
+                {
+                    'fileprefix': 'IMG_',
+                    'filenum': 1001,
+                    'latlng': {'lat': 40.776676, 'lng': -73.971321},
+                    'timestamp': 1671851612.0,
+                    'creator': 'creator',
+                    'groups': [
+                        {'main': '/path/one/IMG_1001.JPG', 'supporting': []},
+                        {'main': '/path/one/IMG_1002.JPG', 'supporting': []},
+                        {'main': '/path/one/IMG_1003.JPG', 'supporting': [
+                            '/path/one/IMG_1003.MOV',
+                        ]},
+                        {'main': '/path/one/IMG_1004.JPG', 'supporting': []},
+                    ],
+                },
+                {
+                    'fileprefix': 'IMG_',
+                    'filenum': 1005,
+                    'latlng': {'lat': 40.776676, 'lng': -73.971321},
+                    'timestamp': 1671851612.0,
+                    'creator': 'other',
+                    'groups': [
+                        {'main': '/path/one/IMG_1005.JPG', 'supporting': []},
+                    ],
+                },
+            ])
