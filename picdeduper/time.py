@@ -5,19 +5,23 @@ TimeString = str
 
 
 def datetime_from_string(time_string: TimeString) -> datetime:
+    if not time_string: return None
     return datetime.strptime(time_string, "%Y-%m-%d %H:%M:%S %z")
 
 
 def timestamp_from_string(time_string: TimeString) -> Timestamp:
+    if not time_string: return None
     return datetime_from_string(time_string).timestamp()
 
 
 def datetime_from_timestamp(timestamp: Timestamp) -> datetime:
+    if not timestamp: return None
     return datetime.utcfromtimestamp(timestamp)
 
 
 def string_from_timestamp(timestamp: Timestamp) -> TimeString:
     """Always returns in UTC"""
+    if not timestamp: return None
     return datetime_from_timestamp(timestamp).strftime("%Y-%m-%d %H:%M:%S +0000")
 
 

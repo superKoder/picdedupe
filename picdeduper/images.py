@@ -16,17 +16,17 @@ def filename_dcf_prefix_and_number(path) -> Tuple[str, int]:
     e.g. "DSC_1234.JPG" -> ("DSC_", 1234)  # Nikon, Sony
     e.g. "DSCF1234.JPG" -> ("DSCF", 1234)  # Fuji
     e.g. "P0010123.JPG" -> ("P001",  123)  # Panasonic
-    e.g. "README.TXT"   -> None
+    e.g. "README.TXT"   -> (None  , None)
     """
     core_filename = pds.path_core_filename(path)
     if len(core_filename) != 8:
-        return None
+        return (None, None)
     matches = RE_FILENAME_NUM.match(core_filename)
     if matches:
         prefix = matches.group(1)
         ordering = int(matches.group(2))
         return (prefix, ordering)
-    return None
+    return (None, None)
 
 def is_picture_filename(filename: pds.Filename) -> bool:
     ext = pds.filename_ext(filename).upper()

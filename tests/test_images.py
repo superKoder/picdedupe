@@ -15,9 +15,9 @@ class TimeTests(unittest.TestCase):
         self.assertEqual(images.filename_dcf_prefix_and_number("IMG_1234 copy 2.JPG"), ("IMG_", 1234))
         self.assertEqual(images.filename_dcf_prefix_and_number("IMG_1234 2.JPG"), ("IMG_", 1234))
 
-        self.assertEqual(images.filename_dcf_prefix_and_number("MyPic.JPG"), None)
-        self.assertEqual(images.filename_dcf_prefix_and_number("My1stPic.JPG"), None)
-        self.assertEqual(images.filename_dcf_prefix_and_number("NotDsc12345.JPG"), None)
+        self.assertEqual(images.filename_dcf_prefix_and_number("MyPic.JPG"), (None, None))
+        self.assertEqual(images.filename_dcf_prefix_and_number("My1stPic.JPG"), (None, None))
+        self.assertEqual(images.filename_dcf_prefix_and_number("NotDsc12345.JPG"), (None, None))
 
     def test_is_picture_file(self):
         self.assertTrue(images.is_picture_filename("IMG_1234.JPG"))

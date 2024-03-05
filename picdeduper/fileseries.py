@@ -65,7 +65,7 @@ class PictureFileSeriesSplitter:
                  max_timestamp_diff: pdt.Timestamp = 8*3600) -> None:
 
         self.all_file_series: List[PictureFileSeries] = list()
-        
+
         self.curr_file_series: PictureFileSeries = None
         self.curr_file_group: filegroups.PictureFileGroup = None
         self.curr_file_prefix: str = None
@@ -85,10 +85,12 @@ class PictureFileSeriesSplitter:
         return (file_num > self.curr_file_num + self.max_file_num_gap + 1)
 
     def _is_too_far_away(self, latlng: pdl.LatLng) -> bool:
-        if not self.curr_file_series:
-            return True
         if self.curr_file_series.latlng == latlng:
             return False
+        if not self.curr_file_series:
+            return True
+        if not latlng:
+            return False    # We don't know. So let's look at other fields.
         if not self.curr_file_series.latlng:
             return True
         return ((self.curr_file_series.latlng.distance_in_km(latlng)) > self.max_distance_degrees)
@@ -122,7 +124,7 @@ class PictureFileSeriesSplitter:
                           latlng: pdl.LatLng,
                           timestamp: pdt.Timestamp,
                           creator: str) -> bool:
-        
+
         if self._is_file_num_gap(file_prefix, file_num):
             return True
 
@@ -146,16 +148,16 @@ class PictureFileSeriesSplitter:
         latlng: pdl.LatLng = pdl.parse_latlng(properties[pdc.KEY_IMAGE_LOC])
         timestamp: pdt.Timestamp = pdt.timestamp_from_string(properties[pdc.KEY_IMAGE_DATE])
 
-        if self._needs_new_series(file_prefix, file_num, latlng, timestamp, creator):
-            self._start_new_series(file_prefix, file_num, latlng, timestamp, creator)
-
-        assert self.curr_file_series
-
         if ((self.curr_file_group) and
             (file_num == self.curr_file_num) and
                 (self.curr_file_group.could_include_path(path))):
             self.curr_file_group.add_file_path(path)
             return
+
+        if self._needs_new_series(file_prefix, file_num, latlng, timestamp, creator):
+            self._start_new_series(file_prefix, file_num, latlng, timestamp, creator)
+
+        assert self.curr_file_series
 
         self.curr_file_group = filegroups.PictureFileGroup()
         self.curr_file_group.add_file_path(path)
