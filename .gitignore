@@ -129,6 +129,7 @@ dmypy.json
 .pyre/
 
 # My own
+.DS_Store
 picdedupe*.json
 del/
 del_*
