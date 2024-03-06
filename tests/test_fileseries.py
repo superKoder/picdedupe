@@ -132,6 +132,36 @@ class FileSeriesTests(unittest.TestCase):
         self.assertEqual(len(file_series_on_23rd.file_groups), 2)
         self.assertEqual(len(file_series_on_24th.file_groups), 3)
 
+    def test_missing_time(self):
+
+        splitter = fileseries.PictureFileSeriesSplitter()
+
+        self.assertEqual(len(splitter.all_file_series), 0)
+
+        time_a = {
+            pdc.KEY_IMAGE_CREATOR: "creator",
+            pdc.KEY_IMAGE_LOC: latlngs.NEW_YORK.as_string(),
+            pdc.KEY_IMAGE_DATE: "2022-12-23 20:13:32 -0700",
+        }
+
+        no_time = {
+            pdc.KEY_IMAGE_CREATOR: "creator",
+            pdc.KEY_IMAGE_LOC: latlngs.NEW_YORK.as_string(),
+            pdc.KEY_IMAGE_DATE: None,
+        }
+
+        splitter.add_path("/path/one/IMG_1001.JPG", time_a)
+        splitter.add_path("/path/one/IMG_1002.JPG", time_a)
+        splitter.add_path("/path/one/IMG_1003.JPG", time_a)
+        splitter.add_path("/path/one/IMG_1004.JPG", no_time)
+        splitter.add_path("/path/one/IMG_1005.JPG", no_time)
+
+        self.assertEqual(len(splitter.all_file_series), 2)
+        file_series_with_time = splitter.all_file_series[0]
+        file_series_without_time = splitter.all_file_series[1]
+        self.assertEqual(len(file_series_with_time.file_groups), 3)
+        self.assertEqual(len(file_series_without_time.file_groups), 2)
+
     def test_different_creator(self):
 
         splitter = fileseries.PictureFileSeriesSplitter()

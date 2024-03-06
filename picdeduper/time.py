@@ -32,6 +32,8 @@ def time_strings_are_same_time(a: TimeString, b: TimeString):
 
 def seconds_between_times(a: Timestamp, b: Timestamp):
     """Params a & b can be either our Timestamp or Python's datetime or time strings"""
+    if not a or not b:
+        return None
     if isinstance(a, datetime):
         a = a.timestamp()
     if isinstance(a, str):

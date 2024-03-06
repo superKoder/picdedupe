@@ -52,3 +52,6 @@ class TimeTests(unittest.TestCase):
         self.assertEqual(pdt.seconds_between_times(b_timestamp, a_timestamp), 100)
         self.assertEqual(pdt.seconds_between_times(a_datetime, b_datetime), 100)
         self.assertEqual(pdt.seconds_between_times(a_string, b_string), 100)
+        self.assertEqual(pdt.seconds_between_times(None, b_timestamp), None)
+        self.assertEqual(pdt.seconds_between_times(a_timestamp, None), None)
+        self.assertEqual(pdt.seconds_between_times(None, None), None)

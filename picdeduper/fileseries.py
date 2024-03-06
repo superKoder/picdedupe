@@ -111,6 +111,8 @@ class PictureFileSeriesSplitter:
             return True
         if self.curr_file_series.timestamp == timestamp:
             return False
+        if not timestamp or not self.curr_file_series.timestamp:
+            return True
         if not self.curr_file_series.timestamp:
             return True
         return (pdt.seconds_between_times(timestamp, self.curr_file_series.timestamp) > self.max_timestamp_diff)
@@ -156,8 +158,10 @@ class PictureFileSeriesSplitter:
 
         file_prefix, file_num = images.filename_dcf_prefix_and_number(path)
         creator = properties[pdc.KEY_IMAGE_CREATOR]
-        latlng: pdl.LatLng = pdl.parse_latlng(properties[pdc.KEY_IMAGE_LOC])
-        timestamp: pdt.Timestamp = pdt.timestamp_from_string(properties[pdc.KEY_IMAGE_DATE])
+        image_date = properties[pdc.KEY_IMAGE_DATE]
+        image_loc = properties[pdc.KEY_IMAGE_LOC]
+        latlng: pdl.LatLng = pdl.parse_latlng(image_loc)
+        timestamp: pdt.Timestamp = pdt.timestamp_from_string(image_date)
 
         if ((self.curr_file_group) and
             (file_num == self.curr_file_num) and
