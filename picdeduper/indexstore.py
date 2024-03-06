@@ -3,13 +3,15 @@ from typing import Dict, List
 
 from picdeduper import common as pdc
 from picdeduper import platform as pds
+from picdeduper import fileseries as pfs
+from picdeduper import jsonable
 
 # TODO: This file desperately needs unit tests!!
 
-class IndexStore:
 
-    def __init__(self, platform: pds.Platform) -> None:
-        self.platform = platform
+class IndexStoreData(jsonable.Jsonable):
+
+    def __init__(self) -> None:
         self.by_path = dict()
         self.by_hash = dict()
         self.by_core_filename = dict()
@@ -48,26 +50,79 @@ class IndexStore:
             output[path] = self.image_properties_for_path(path)
         return output
 
-    def _as_dict(self) -> Dict[str, List]:
+    def __eq__(self, rhs: object) -> bool:
+        return (
+            # TODO: self.file_series_splitter = pfs.PictureFileSeriesSplitter()
+            self.by_path == rhs.by_path and
+            self.by_hash == rhs.by_hash and
+            self.by_core_filename == rhs.by_core_filename and
+            self.oldest_image_date == rhs.oldest_image_date and
+            self.newest_image_date == rhs.newest_image_date
+        )
+
+    def jsonable_encode(self) -> Dict[str, List]:
         by_path_copy = self.by_path  # avoiding redundant copy
         by_hash_copy = dict()
         by_filename_copy = dict()
         for key, val in self.by_hash.items():
-            by_hash_copy[key] = sorted(val)
+            by_hash_copy[key] = jsonable.encode(sorted(val))
         for key, val in self.by_core_filename.items():
-            by_filename_copy[key] = sorted(val)
+            by_filename_copy[key] = jsonable.encode(sorted(val))
         return {
-            pdc.KEY_BY_PATH: by_path_copy,
-            pdc.KEY_BY_HASH: by_hash_copy,
-            pdc.KEY_BY_FILENAME: by_filename_copy,
-            pdc.KEY_IMAGE_DATE_STATS: {
+            pdc.KEY_BY_PATH: jsonable.encode(by_path_copy),
+            pdc.KEY_BY_HASH: jsonable.encode(by_hash_copy),
+            pdc.KEY_BY_FILENAME: jsonable.encode(by_filename_copy),
+            pdc.KEY_IMAGE_DATE_STATS: jsonable.encode({
                 pdc.KEY_OLDEST: self.oldest_image_date,
                 pdc.KEY_NEWEST: self.newest_image_date,
-            },
+            }),
         }
 
+    def jsonable_decode(val: Dict):
+        # TODO: This method is not up to date!!
+        obj = IndexStoreData()
+        obj.by_path = val[pdc.KEY_BY_PATH]
+        obj.by_hash = val[pdc.KEY_BY_HASH]
+        obj.by_core_filename = val[pdc.KEY_BY_FILENAME]
+        image_date_stats = val[pdc.KEY_IMAGE_DATE_STATS]
+        obj.newest_image_date = image_date_stats[pdc.KEY_NEWEST]
+        obj.oldest_image_date = image_date_stats[pdc.KEY_OLDEST]
+        for key in obj.by_hash:
+            obj.by_hash[key] = set(obj.by_hash[key])
+        for key in obj.by_core_filename:
+            obj.by_core_filename[key] = set(obj.by_core_filename[key])
+        # NOTE: KEY_BY_SERIES gets loaded through calls ot the splitter.
+        return obj
+
+
+class IndexStore:
+
+    def __init__(self, platform: pds.Platform) -> None:
+        self.platform = platform
+        self.data = IndexStoreData()
+        self.file_series_splitter = pfs.PictureFileSeriesSplitter()
+
+    def add(self, path: pds.Path, image_properties: pdc.PropertyDict):
+        print(f"Indexed: {path}")
+        self.data.add(path, image_properties)
+        self.file_series_splitter.add_path(path, image_properties)
+
+    def image_properties_for_path(self, path: pds.Path) -> pdc.PropertyDict:
+        return self.data.image_properties_for_path(path)
+
+    def image_properties_dict_for_paths(self, paths: pds.PathSet) -> Dict[pds.Path, pdc.PropertyDict]:
+        return self.data.image_properties_dict_for_paths(paths)
+
     def save(self, path: pds.Path) -> str:
-        json_string = json.dumps(obj=self._as_dict(), indent=2, sort_keys=True)
+
+        # by_series_copy = list()
+        # for val in self.file_series_splitter.all_file_series:
+        #     by_series_copy.append(jsonable.encode(val))
+
+        storage_dict = jsonable.encode(self.data)
+        storage_dict[pdc.KEY_BY_SERIES] = jsonable.encode(sorted(self.file_series_splitter.all_file_series))
+
+        json_string = json.dumps(obj=storage_dict, indent=2, sort_keys=True)
         self.platform.write_text_file(path, json_string)
 
     def load(path: pds.Path, platform: pds.Platform) -> None:
@@ -76,17 +131,13 @@ class IndexStore:
             print("WARNING: No JSON file found. Starting new one.")
             return index_store
         content = platform.read_text_file(path)
-        index_store_dict = json.loads(content)
-        index_store.by_path = index_store_dict[pdc.KEY_BY_PATH]
-        index_store.by_hash = index_store_dict[pdc.KEY_BY_HASH]
-        index_store.by_core_filename = index_store_dict[pdc.KEY_BY_FILENAME]
-        image_date_stats = index_store_dict[pdc.KEY_IMAGE_DATE_STATS]
-        index_store.newest_image_date = image_date_stats[pdc.KEY_NEWEST]
-        index_store.oldest_image_date = image_date_stats[pdc.KEY_OLDEST]
-        for key in index_store.by_hash:
-            index_store.by_hash[key] = set(index_store.by_hash[key])
-        for key in index_store.by_core_filename:
-            index_store.by_core_filename[key] = set(index_store.by_core_filename[key])
+        index_store_data_dict = json.loads(content)
+        index_store.data = jsonable.decode(index_store_data_dict, IndexStoreData)
+
+        # Rebuild self.file_series_splitter.all_file_series:
+        for path, properties in index_store.data.by_path.items():
+            index_store.file_series_splitter.add_path(path, properties)
+
         return index_store
 
 

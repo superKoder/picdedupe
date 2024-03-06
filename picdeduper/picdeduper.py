@@ -20,10 +20,10 @@ class PicDeduper:
         This assumes that no changes were made to the file. 
         This is not necessarily true, though! A hash should be used for certainty.
         """
-        if not image_path in index_store.by_path:
+        if not image_path in index_store.data.by_path:
             return False
         quick_signature = self.fingerprinter.quick_image_signature_dict_of(image_path)
-        known_signature = index_store.by_path[image_path]
+        known_signature = index_store.data.by_path[image_path]
         return pdeval.is_quick_signature_equal(quick_signature, known_signature)
 
     def _index_dir(self, index_store: IndexStore, start_dir: pds.Path, skip_untouched=True, do_evaluation=True):
