@@ -52,10 +52,26 @@ def main():
 
     parser.add_argument(
         "-f", "--json_file",
-        required=True,
+        required=False,  # TODO: should be required later, after the debug variants are taken out
         metavar="path_to_json_file",
         dest="json_file_path",
         help="Path of where to load and/or save the JSON file that represents the collection",
+    )
+
+    parser.add_argument(
+        "--debug_json_load_file",
+        required=False,
+        metavar="debug_json_load_file_path",
+        dest="debug_json_load_file_path",
+        help="[DEBUG ONLY] Path of where to load the JSON file that represents the collection",
+    )
+
+    parser.add_argument(
+        "--debug_json_save_file",
+        required=False,
+        metavar="debug_json_save_file_path",
+        dest="debug_json_save_file_path",
+        help="[DEBUG ONLY] Path of where to save the JSON file that represents the collection",
     )
 
     parser.add_argument(
@@ -76,14 +92,19 @@ def main():
 
     candidate_start_dir = args.candidate_start_dir
     collection_start_dir = args.collection_start_dir
-    json_path = args.json_file_path
+    json_load_path = args.debug_json_load_file_path or args.json_file_path
+    json_save_path = args.debug_json_save_file_path or args.json_file_path
 
-    if not collection_start_dir and json_path and not platform.path_exists(json_path):
-        print(f"-error: Cannot find {json_path}")
+    if not json_load_path or not json_save_path:
+        print("-error: the following arguments are required: -f/--json_file")
         sys.exit(1)
 
-    print(f"Will load IndexStore from {json_path} if available.")
-    index_store = IndexStore.load(json_path, platform)
+    if not collection_start_dir and json_load_path and not platform.path_exists(json_load_path):
+        print(f"-error: Cannot find {json_load_path}")
+        sys.exit(1)
+
+    print(f"Will load IndexStore from {json_load_path} if available.")
+    index_store = IndexStore.load(json_load_path, platform)
     print("Done.")
 
     if collection_start_dir and not picdeduper.should_quit:
@@ -92,8 +113,8 @@ def main():
             index_store, collection_start_dir)
         print("Done.")
 
-        print(f"Saving IndexStore to {json_path}...")
-        index_store.save(json_path)
+        print(f"Saving IndexStore to {json_save_path}...")
+        index_store.save(json_save_path)
         print("Done.")
 
     if candidate_start_dir and not picdeduper.should_quit:

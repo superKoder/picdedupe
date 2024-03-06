@@ -44,6 +44,18 @@
             ]
         },
         {
+            "name": "picdedupe (usecase 1D)",
+            "type": "debugpy",
+            "program": "picdedupe.py",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "args": [
+                "--debug_json_load_file", "./my_load.json",
+                "--debug_json_save_file", "./my_save.json",
+                "--collection_dir", "~/collection",
+            ]
+        },
+        {
             "name": "picdedupe (usecase 2)",
             "type": "debugpy",
             "program": "picdedupe.py",
