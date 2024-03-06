@@ -69,6 +69,14 @@ class LatLng(jsonable.Jsonable):
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(object)
 
+    # The order doesn't have to make sense, as long as it is stable.
+    def __lt__(self, rhs: object) -> bool:
+        if self.latitude != rhs.latitude: 
+            return self.latitude < rhs.latitude
+        if self.longitude != rhs.longitude: 
+            return self.longitude < rhs.longitude
+        self.altitude < rhs.altitude
+
     def __str__(self) -> str:
         return self.as_string()
 

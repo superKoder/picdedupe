@@ -44,6 +44,29 @@ class PictureFileSeries(jsonable.Jsonable):
     def add_file_group(self, file_group: filegroups.PictureFileGroup) -> None:
         self.file_groups.append(file_group)
 
+    def __eq__(self, rhs: object) -> bool:
+        return (
+            self.file_prefix == rhs.file_prefix and
+            self.file_num == rhs.file_num and
+            self.latlng == rhs.latlng and
+            self.timestamp == rhs.timestamp and
+            self.creator == rhs.creator and
+            self.file_groups == rhs.file_groups
+        )
+
+    def __lt__(self, rhs: object) -> bool:
+        if self.file_prefix and rhs.file_prefix and self.file_prefix != rhs.file_prefix: 
+            return self.file_prefix < rhs.file_prefix
+        if self.file_num and rhs.file_num and  self.file_num != rhs.file_num: 
+            return self.file_num < rhs.file_num
+        if self.timestamp and rhs.timestamp and  self.timestamp != rhs.timestamp: 
+            return self.timestamp < rhs.timestamp
+        if self.timestamp and rhs.timestamp and  self.creator != rhs.creator: 
+            return self.timestamp < rhs.timestamp
+        if self.latlng and rhs.latlng and  self.latlng != rhs.latlng: 
+            return self.latlng < rhs.latlng
+        return self.file_groups < self.file_groups
+
     def jsonable_encode(self) -> Dict:
         return {
             KEY_JSON_FILE_PREFIX: jsonable.encode(self.file_prefix),

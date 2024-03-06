@@ -51,6 +51,9 @@ class FileGroup(jsonable.Jsonable):
         return (pds.path_core_filename(self.main_file_path()) ==
                 pds.path_core_filename(path))
     
+    def __eq__(self, rhs) -> bool:
+        return (self.main_path == rhs.main_path) and (self.supporting_file_paths == rhs.supporting_file_paths)
+
     def jsonable_encode(self) -> Dict:
         return {
             KEY_JSON_MAIN: jsonable.encode(self.main_path),
