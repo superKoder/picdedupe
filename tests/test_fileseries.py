@@ -190,7 +190,7 @@ class FileSeriesTests(unittest.TestCase):
         series = splitter.all_file_series
 
         self.assertListEqual(
-            jsonable.to(series), [
+            jsonable.encode(series), [
                 {
                     'fileprefix': 'IMG_',
                     'filenum': 1001,
@@ -217,3 +217,58 @@ class FileSeriesTests(unittest.TestCase):
                     ],
                 },
             ])
+
+    def test_jsonable_decode(self):
+        input = [
+            {
+                'fileprefix': 'IMG_',
+                'filenum': 1001,
+                'latlng': {'lat': 40.776676, 'lng': -73.971321},
+                'timestamp': 1671851612.0,
+                'creator': 'creator',
+                'groups': [
+                    {'main': '/path/one/IMG_1001.JPG', 'supporting': []},
+                    {'main': '/path/one/IMG_1002.JPG', 'supporting': []},
+                    {'main': '/path/one/IMG_1003.JPG', 'supporting': [
+                        '/path/one/IMG_1003.MOV',
+                    ]},
+                    {'main': '/path/one/IMG_1004.JPG', 'supporting': []},
+                ],
+            },
+            {
+                'fileprefix': 'IMG_',
+                'filenum': 1005,
+                'latlng': {'lat': 40.776676, 'lng': -73.971321},
+                'timestamp': 1671851612.0,
+                'creator': 'other',
+                'groups': [
+                    {'main': '/path/one/IMG_1005.JPG', 'supporting': []},
+                ],
+            },
+        ]
+
+        splitter = fileseries.PictureFileSeriesSplitter()
+
+        creator_a = {
+            pdc.KEY_IMAGE_CREATOR: "creator",
+            pdc.KEY_IMAGE_LOC: latlngs.NEW_YORK.as_string(),
+            pdc.KEY_IMAGE_DATE: "2022-12-23 20:13:32 -0700"
+        }
+
+        creator_b = {
+            pdc.KEY_IMAGE_CREATOR: "other",  # !!!
+            pdc.KEY_IMAGE_LOC: latlngs.NEW_YORK.as_string(),
+            pdc.KEY_IMAGE_DATE: "2022-12-23 20:13:32 -0700"
+        }
+
+        splitter.add_path("/path/one/IMG_1001.JPG", creator_a)
+        splitter.add_path("/path/one/IMG_1002.JPG", creator_a)
+        splitter.add_path("/path/one/IMG_1003.JPG", creator_a)
+        splitter.add_path("/path/one/IMG_1003.MOV", creator_a)
+        splitter.add_path("/path/one/IMG_1004.JPG", creator_a)
+
+        splitter.add_path("/path/one/IMG_1005.JPG", creator_b)
+
+        expected = splitter.all_file_series
+
+        self.assertEqual(jsonable.decode(input, fileseries.PictureFileSeries), expected)

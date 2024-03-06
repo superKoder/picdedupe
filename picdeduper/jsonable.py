@@ -23,48 +23,104 @@ class Jsonable(abc.ABC):
     """
     Interface for classes that can do their own conversions.
     """
+    
     @abc.abstractmethod
-    def as_jsonable(self) -> Dict:
+    def jsonable_encode(self) -> Dict:
+        """
+        Turns an object into a json-able type, like a dict.
+        """
+        pass
+
+    @abc.abstractclassmethod
+    def jsonable_decode(jsonable):
+        """
+        Creates an object out of json-able type, like a dict.
+        """
         pass
 
 
 # # # # # # # # # # # # # # # # # # # 
-#     Overloads of jsonable.to()    #
+#   Overloads of jsonable.encode()  #
 # # # # # # # # # # # # # # # # # # #
     
 @singledispatch
-def to(val):
+def encode(val):
     return val
 
-@to.register
+@encode.register
 def _(val: int) -> int:
     return val
 
-@to.register
+@encode.register
 def _(val: str) -> str:
     return val
 
-@to.register
+@encode.register
 def _(val: float) -> float:
     return val
 
-@to.register
+@encode.register
 def _(val: None) -> None:
     return val
 
-@to.register
-def _(val: list) -> List:
-    return [to(x) for x in val]
-
-@to.register
+@encode.register
 def _(val: dict) -> Dict:
-    return {k: to(v) for (k,v) in val.items()}
+    return {k: encode(v) for (k,v) in val.items()}
 
-@to.register
+@encode.register
+def _(val: list) -> List:
+    return [encode(x) for x in val]
+
+@encode.register
+def _(val: set) -> List:
+    # sets are not jsonable, converting to list
+    return sorted([encode(x) for x in val])
+
+@encode.register
 def _(val: Jsonable) -> Dict:
-    return val.as_jsonable()
+    return val.jsonable_encode()
 
-@to.register
+@encode.register
 def _(val: object) -> None:
-    assert(False, "Derive from Jsonable and override .as_jsonable()")
+    assert(False, "Derive from Jsonable and override .jsonable_encode()")
     return None
+
+
+# # # # # # # # # # # # # # # # # # # 
+#    Overloads of jsonable.from()   #
+# # # # # # # # # # # # # # # # # # #
+
+@singledispatch
+def decode(as_type: type, val):
+    return val
+
+@decode.register
+def _(val: int, as_type: type) -> int:
+    return val
+
+@decode.register
+def _(val: str, as_type: type) -> str:
+    return val
+
+@decode.register
+def _(val: float, as_type: type) -> float:
+    return val
+
+@decode.register
+def _(val: None, as_type: type) -> None:
+    return val
+
+@decode.register
+def _(val: dict, as_type: type):
+    if hasattr(as_type, 'jsonable_decode'):
+        return as_type.jsonable_decode(val)
+    return val
+
+@decode.register
+def _(val: list, as_type: type):
+    """
+    `list` and `set` are special. The `as_type` is about the type of the elements!
+    """
+    if as_type == set:
+        return set(decode(val, list))
+    return [decode(x, as_type) for x in val]

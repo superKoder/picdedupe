@@ -30,7 +30,8 @@ class PictureFileSeries(jsonable.Jsonable):
                  file_num: int,
                  latlng: pdl.LatLng,
                  timestamp: pdt.Timestamp,
-                 creator: str) -> None:
+                 creator: str,
+                 file_groups: List[filegroups.PictureFileGroup] = None) -> None:
 
         super().__init__()
         self.file_prefix = file_prefix
@@ -38,20 +39,30 @@ class PictureFileSeries(jsonable.Jsonable):
         self.latlng = latlng
         self.timestamp = timestamp
         self.creator = creator
-        self.file_groups: List[filegroups.PictureFileGroup] = list()
+        self.file_groups: List[filegroups.PictureFileGroup] = (file_groups if file_groups else list())
 
     def add_file_group(self, file_group: filegroups.PictureFileGroup) -> None:
         self.file_groups.append(file_group)
 
-    def as_jsonable(self) -> Dict:
+    def jsonable_encode(self) -> Dict:
         return {
-            KEY_JSON_FILE_PREFIX: jsonable.to(self.file_prefix),
-            KEY_JSON_FILE_NUM: jsonable.to(self.file_num),
-            KEY_JSON_LATLNG: jsonable.to(self.latlng),
-            KEY_JSON_TIMESTAMP: jsonable.to(self.timestamp),
-            KEY_JSON_CREATOR: jsonable.to(self.creator),
-            KEY_JSON_GROUPS: jsonable.to(self.file_groups),
+            KEY_JSON_FILE_PREFIX: jsonable.encode(self.file_prefix),
+            KEY_JSON_FILE_NUM: jsonable.encode(self.file_num),
+            KEY_JSON_LATLNG: jsonable.encode(self.latlng),
+            KEY_JSON_TIMESTAMP: jsonable.encode(self.timestamp),
+            KEY_JSON_CREATOR: jsonable.encode(self.creator),
+            KEY_JSON_GROUPS: jsonable.encode(self.file_groups),
         }
+
+    def jsonable_decode(val: dict):
+        return PictureFileSeries(
+            jsonable.decode(val[KEY_JSON_FILE_PREFIX], str),
+            jsonable.decode(val[KEY_JSON_FILE_NUM], int),
+            jsonable.decode(val[KEY_JSON_LATLNG], pdl.LatLng),
+            jsonable.decode(val[KEY_JSON_TIMESTAMP], pdt.Timestamp),
+            jsonable.decode(val[KEY_JSON_CREATOR], str),
+            jsonable.decode(val[KEY_JSON_GROUPS], filegroups.PictureFileGroup)
+        )
 
 
 class PictureFileSeriesSplitter:

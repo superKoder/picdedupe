@@ -1,7 +1,7 @@
 from picdeduper import platform as pds
 from picdeduper import jsonable
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, abstractclassmethod
 from typing import Dict
 
 KEY_JSON_MAIN = "main"
@@ -51,12 +51,15 @@ class FileGroup(jsonable.Jsonable):
         return (pds.path_core_filename(self.main_file_path()) ==
                 pds.path_core_filename(path))
     
-    def as_jsonable(self) -> Dict:
+    def jsonable_encode(self) -> Dict:
         return {
-            KEY_JSON_MAIN: jsonable.to(self.main_path),
-            KEY_JSON_SUPPORTING: jsonable.to(sorted(self.supporting_file_paths)),
+            KEY_JSON_MAIN: jsonable.encode(self.main_path),
+            KEY_JSON_SUPPORTING: jsonable.encode(sorted(self.supporting_file_paths)),
         }
 
+    @abstractclassmethod
+    def jsonable_decode(jsonable: Dict):
+        pass
 
 class PictureFileGroup(FileGroup):
     """A file group is one or more files that belong together. 
@@ -79,3 +82,9 @@ class PictureFileGroup(FileGroup):
                 if main_file_ext in ('.mov', '.mp4'):
                     return path
         return self.main_path
+
+    def jsonable_decode(val: Dict):
+        obj = PictureFileGroup()
+        obj.main_path = jsonable.decode(val[KEY_JSON_MAIN], str)
+        obj.supporting_file_paths = jsonable.decode(val[KEY_JSON_SUPPORTING], set)
+        return obj

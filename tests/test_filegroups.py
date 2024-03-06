@@ -66,4 +66,15 @@ class PictureFileGroupTests(unittest.TestCase):
         filegroup.add_file_path("/test/IMG_123.MOV")
         filegroup.add_file_path("/test/IMG_123.JPG")
         filegroup.add_file_path("/test/IMG_123.RAW")
-        self.assertDictEqual(jsonable.to(filegroup), {'main': '/test/IMG_123.JPG', 'supporting': ['/test/IMG_123.MOV', '/test/IMG_123.RAW']})
+        self.assertDictEqual(jsonable.encode(filegroup), {'main': '/test/IMG_123.JPG', 'supporting': ['/test/IMG_123.MOV', '/test/IMG_123.RAW']})
+
+    def test_jsonable_decode(self):
+        expected = filegroups.PictureFileGroup()
+        expected.add_file_path("/test/IMG_123.MOV")
+        expected.add_file_path("/test/IMG_123.JPG")
+        expected.add_file_path("/test/IMG_123.RAW")
+
+        input = {'main': '/test/IMG_123.JPG', 'supporting': ['/test/IMG_123.MOV', '/test/IMG_123.RAW']}
+        output: filegroups.PictureFileGroup = jsonable.decode(input, filegroups.PictureFileGroup)
+
+        self.assertEqual(output, expected)

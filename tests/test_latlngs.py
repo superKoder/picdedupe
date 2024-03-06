@@ -96,4 +96,4 @@ class LatLngTests(unittest.TestCase):
 
     def test_jsonable_to(self):
         latlng = latlngs.LatLng(+98.765, -124.45)
-        self.assertDictEqual(jsonable.to(latlng), {"lat": +98.765, "lng": -124.45})
+        self.assertDictEqual(jsonable.encode(latlng), {"lat": +98.765, "lng": -124.45})

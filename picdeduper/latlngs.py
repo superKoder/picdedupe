@@ -11,6 +11,8 @@ DistanceInKm = float
 
 RE_LATLNG = re.compile(r"<([\+\-]?\d+\.?\d*),([\+\-]?\d+\.?\d*)>")
 
+KEY_JSON_LAT = "lat"
+KEY_JSON_LNG = "lng"
 
 class LatLng(jsonable.Jsonable):
     """Represents at latitude-longitude, an optionally an altitude"""
@@ -73,11 +75,14 @@ class LatLng(jsonable.Jsonable):
     def __repr__(self) -> str:
         return f"LatLng({self.latitude}, {self.longitude}, {self.altitude})"
 
-    def as_jsonable(self) -> Dict:
+    def jsonable_encode(self) -> Dict:
         return {
-            "lat": jsonable.to(self.latitude),
-            "lng": jsonable.to(self.longitude),
+            KEY_JSON_LAT: jsonable.encode(self.latitude),
+            KEY_JSON_LNG: jsonable.encode(self.longitude),
         }
+    
+    def jsonable_decode(jsonable: Dict):
+        return LatLng(jsonable[KEY_JSON_LAT], jsonable[KEY_JSON_LNG])
 
 
 def parse_latlng(string: str) -> LatLng:
